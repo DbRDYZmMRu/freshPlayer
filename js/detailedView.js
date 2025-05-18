@@ -20,6 +20,9 @@ export class DetailedView {
   }
   
   init(applyGradient) {
+    if (!this.backBtn || !this.lyricsBtn) {
+      console.error('Back or lyrics button not found in DOM');
+    }
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
     this.bindEvents();
@@ -56,28 +59,100 @@ export class DetailedView {
   }
   
   bindEvents() {
-    this.detailedPlayBtn.addEventListener('click', () => this.songState.togglePlay());
-    this.prevBtn.addEventListener('click', () => this.songState.playPrevious());
-    this.nextBtn.addEventListener('click', () => this.songState.playNext());
-    this.rewindBtn.addEventListener('click', () => this.songState.seek(-10));
-    this.forwardBtn.addEventListener('click', () => this.songState.seek(10));
-    this.progressContainer.addEventListener('click', (e) => {
-      const rect = this.progressContainer.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const width = rect.width;
-      const percentage = clickX / width;
-      this.songState.seekTo(percentage);
+    // Remove existing listeners to prevent duplicates
+    const buttons = [this.detailedPlayBtn, this.prevBtn, this.nextBtn, this.rewindBtn, this.forwardBtn, this.backBtn, this.lyricsBtn];
+    buttons.forEach(btn => {
+      if (btn) {
+        btn.removeEventListener('click', btn._handler);
+        btn._handler = null;
+      }
     });
-    this.backBtn.addEventListener('click', () => {
-      this.detailedPlayer.classList.remove('active');
-      document.getElementById('tracklist-view').classList.remove('hidden');
-      document.getElementById('playback-overlay').style.display = 'flex';
-      document.body.style.background = 'linear-gradient(to bottom, #1e1e2f, #2a2a4a)';
-    });
+    
+    if (this.detailedPlayBtn) {
+      this.detailedPlayBtn._handler = () => {
+        console.log('Play button clicked');
+        this.songState.togglePlay();
+      };
+      this.detailedPlayBtn.addEventListener('click', this.detailedPlayBtn._handler);
+    }
+    
+    if (this.prevBtn) {
+      this.prevBtn._handler = () => {
+        console.log('Previous button clicked');
+        this.songState.playPrevious();
+      };
+      this.prevBtn.addEventListener('click', this.prevBtn._handler);
+    }
+    
+    if (this.nextBtn) {
+      this.nextBtn._handler = () => {
+        console.log('Next button clicked');
+        this.songState.playNext();
+      };
+      this.nextBtn.addEventListener('click', this.nextBtn._handler);
+    }
+    
+    if (this.rewindBtn) {
+      this.rewindBtn._handler = () => {
+        console.log('Rewind button clicked');
+        this.songState.seek(-10);
+      };
+      this.rewindBtn.addEventListener('click', this.rewindBtn._handler);
+    }
+    
+    if (this.forwardBtn) {
+      this.forwardBtn._handler = () => {
+        console.log('Forward button clicked');
+        this.songState.seek(10);
+      };
+      this.forwardBtn.addEventListener('click', this.forwardBtn._handler);
+    }
+    
+    if (this.progressContainer) {
+      this.progressContainer._handler = (e) => {
+        if (e.target === this.progressContainer || e.target === this.progressBar) {
+          console.log('Progress bar clicked');
+          e.stopPropagation();
+          const rect = this.progressContainer.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const width = rect.width;
+          const percentage = clickX / width;
+          this.songState.seekTo(percentage);
+        }
+      };
+      this.progressContainer.addEventListener('click', this.progressContainer._handler);
+    }
+    
+    if (this.backBtn) {
+      this.backBtn._handler = (e) => {
+        console.log('Back button clicked');
+        e.stopPropagation();
+        e.preventDefault();
+        this.detailedPlayer.classList.remove('active');
+        document.getElementById('tracklist-view').classList.remove('hidden');
+        document.getElementById('playback-overlay').style.display = 'flex';
+        document.body.style.background = 'linear-gradient(to bottom, #1e1e2f, #2a2a4a)';
+      };
+      this.backBtn.addEventListener('click', this.backBtn._handler);
+    }
+    
+    if (this.lyricsBtn) {
+      this.lyricsBtn._handler = (e) => {
+        console.log('Lyrics button clicked');
+        e.stopPropagation();
+        e.preventDefault();
+        this.detailedPlayer.classList.remove('active');
+        document.getElementById('lyrics-player').classList.add('active');
+        window.scrollTo(0, 0);
+      };
+      this.lyricsBtn.addEventListener('click', this.lyricsBtn._handler);
+    }
   }
   
   show() {
     this.detailedPlayer.classList.add('active');
+    // Rebind events to ensure interactivity
+    this.bindEvents();
   }
   
   hide() {

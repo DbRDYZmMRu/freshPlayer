@@ -1,3 +1,4 @@
+/* styles.css */
 body {
   background: linear-gradient(to bottom, #1e1e2f, #2a2a4a);
   color: #fff;
@@ -29,7 +30,7 @@ body {
 
 .carousel-inner img {
   width: 100%;
-  max-width: 280px;
+  max-width: 240px;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 12px;
@@ -67,11 +68,11 @@ body {
   overflow-x: auto;
   gap: 15px;
   padding-bottom: 10px;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 
 .playlist-section::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
 }
 
 .playlist-item {
@@ -81,6 +82,7 @@ body {
 
 .playlist-item img {
   width: 100%;
+  max-width: 120px;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 8px;
@@ -182,9 +184,9 @@ body {
 .tracklist-item {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 15px;
+  padding: 10px;
   margin-bottom: 15px;
-  height: 80px;
+  height: 70px;
   display: flex;
   align-items: center;
   position: relative;
@@ -201,11 +203,19 @@ body {
   align-items: center;
 }
 
+.track-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 10px;
+}
+
 .track-number {
-  width: 30px;
+  width: 25px;
   text-align: right;
   opacity: 0.75;
-  margin-right: 15px;
+  margin-right: 10px;
 }
 
 .track-details {
@@ -213,15 +223,14 @@ body {
 }
 
 .track-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
 .track-duration {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.75;
-  margin-top: 4px;
-  margin-left: 10px;
+  margin-left: 8px;
 }
 
 .menu-icon {
@@ -255,8 +264,8 @@ body {
 }
 
 .playback-cover {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   object-fit: cover;
   border-radius: 6px;
   margin-right: 10px;
@@ -291,44 +300,41 @@ body {
 .detailed-player {
   max-width: 414px;
   width: 100%;
-  padding: 0 15px;
+  padding: 20px 15px;
   margin: 0 auto;
   display: none;
   position: relative;
-  min-height: 100vh; /* Ensure full height */
+  min-height: 100vh;
   box-sizing: border-box;
+  pointer-events: none; /* Prevent parent from capturing clicks */
 }
 
 .detailed-player.active {
-  display: flex; /* Flex for vertical centering */
+  display: flex;
   flex-direction: column;
-  justify-content: center; /* Center content vertically */
+  align-items: center;
+  pointer-events: auto; /* Allow clicks when active */
 }
 
 .album-art-container {
-  width: 300px; /* Fixed size for album art */
+  width: 300px;
   height: 300px;
-  max-width: 80vw; /* Responsive scaling */
+  max-width: 80vw;
   max-height: 80vw;
-  overflow: hidden; /* Prevent overflow */
-  border-radius: 15px; /* Match existing border-radius */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Match TracklistView */
+  overflow: hidden;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+  pointer-events: none; /* Prevent album art from capturing clicks */
 }
 
 .detailed-album-art {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Maintain aspect ratio, crop if needed */
-  border-radius: 15px; /* Consistent rounding */
-  display: block; /* Remove inline spacing */
-}
-
-/* Responsive adjustments */
-@media (max-width: 360px) {
-  .album-art-container {
-    width: 240px; /* Smaller size for small screens */
-    height: 240px;
-  }
+  object-fit: cover;
+  border-radius: 15px;
+  display: block;
 }
 
 .back-btn {
@@ -347,11 +353,23 @@ body {
   justify-content: center;
   cursor: pointer;
   z-index: 1003;
+  transition: background 0.2s ease;
+  pointer-events: auto;
 }
 
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
 
 .control-btn {
   font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .play-btn {
@@ -362,16 +380,31 @@ body {
   background-color: #6b48ff;
   color: white;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .progress {
   height: 5px;
+  width: 100%;
+  max-width: 300px;
   background-color: #ddd;
   border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .progress-bar {
+  height: 100%;
   background-color: #6b48ff;
+  border-radius: 5px;
+  transition: width 0.1s linear;
 }
 
 .progress-dot {
@@ -381,7 +414,25 @@ body {
   border-radius: 50%;
   position: absolute;
   top: -2.5px;
-  right: 0;
+  right: -5px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bottom-controls {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 1003;
+  transition: opacity 0.2s ease;
+  pointer-events: auto;
+}
+
+.bottom-controls:hover {
+  opacity: 0.8;
 }
 
 /* Lyrics View */
@@ -440,6 +491,12 @@ body {
 }
 
 .lyrics-container p.section {
+  font-weight: bold;
+  opacity: 1;
+}
+
+.lyrics-container p.active {
+  color: #6b48ff;
   font-weight: bold;
   opacity: 1;
 }
@@ -525,7 +582,7 @@ body {
   }
 
   .carousel-inner img {
-    max-width: 240px;
+    max-width: 200px;
   }
 
   .carousel-caption h5 {
@@ -541,7 +598,7 @@ body {
   }
 
   .playlist-item img {
-    width: 100%;
+    max-width: 100px;
   }
 
   .playlist-item .track-title {
@@ -582,6 +639,11 @@ body {
     height: 70px;
   }
 
+  .track-thumbnail {
+    width: 35px;
+    height: 35px;
+  }
+
   .track-number {
     width: 25px;
     margin-right: 10px;
@@ -605,8 +667,8 @@ body {
   }
 
   .playback-cover {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     margin-right: 8px;
   }
 
@@ -620,6 +682,11 @@ body {
 
   .playback-control {
     font-size: 20px;
+  }
+
+  .album-art-container {
+    width: 240px;
+    height: 240px;
   }
 
   .detailed-album-art {
@@ -652,14 +719,12 @@ body {
     font-size: 12px !important;
   }
 
-  .bottom-controls button {
+  .bottom-controls {
     font-size: 18px !important;
   }
 
   .back-btn {
     font-size: 1.25rem;
-;
-
     width: 35px;
     height: 35px;
   }
@@ -670,103 +735,5 @@ body {
 
   .lyrics-container p {
     font-size: 16px !important;
-  }
-}
-/* Add to existing styles.css */
-
-/* Homepage View */
-.playlist-item img {
-  width: 100%;
-  max-width: 120px;
-  /* Smaller thumbnails */
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 8px;
-}
-
-.carousel-inner img {
-  width: 100%;
-  max-width: 240px;
-  /* Smaller album thumbnails */
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 12px;
-  margin: 0 auto;
-  cursor: pointer;
-}
-
-/* Tracklist View */
-.tracklist-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  height: 70px;
-}
-
-.track-info {
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-}
-
-.track-thumbnail {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 6px;
-  margin-right: 10px;
-}
-
-.track-details {
-  flex-grow: 1;
-}
-
-.track-number {
-  width: 25px;
-  text-align: right;
-  opacity: 0.75;
-  margin-right: 10px;
-}
-
-.track-title {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.track-duration {
-  font-size: 12px;
-  opacity: 0.75;
-  margin-left: 8px;
-}
-
-/* Playback Footer */
-.playback-cover {
-  width: 40px;
-  /* Smaller thumbnail */
-  height: 40px;
-  object-fit: cover;
-  border-radius: 6px;
-  margin-right: 10px;
-}
-
-/* Responsive adjustments for 360px screens */
-@media (max-width: 360px) {
-  .playlist-item img {
-    max-width: 100px;
-  }
-  
-  .carousel-inner img {
-    max-width: 200px;
-  }
-  
-  .track-thumbnail {
-    width: 35px;
-    height: 35px;
-  }
-  
-  .playback-cover {
-    width: 35px;
-    height: 35px;
   }
 }

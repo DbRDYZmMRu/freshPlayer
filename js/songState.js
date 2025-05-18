@@ -124,6 +124,11 @@ export class SongState {
     } catch (error) {
       console.error('Error loading album data:', error.message);
     }
+    localStorage.setItem('albumData', JSON.stringify({
+      albums: this.state.albums,
+      songs: this.state.songs
+    }));
+    
   }
   
   setSong(songId) {
@@ -195,13 +200,19 @@ export class SongState {
     }
   }
   
+  // songState.js
   updateProgress() {
     if (this.audio.duration) {
       const currentTime = this.audio.currentTime;
       const duration = this.audio.duration;
       this.state.currentSong.currentTime = this.formatTime(currentTime);
       this.state.currentSong.progress = (currentTime / duration) * 100;
-      this.notify();
+      if (!this.progressDebounce) {
+        this.progressDebounce = setTimeout(() => {
+          this.notify();
+          this.progressDebounce = null;
+        }, 100);
+      }
     }
   }
   
