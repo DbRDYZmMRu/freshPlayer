@@ -436,6 +436,7 @@ body {
 }
 
 /* Lyrics View */
+/* Lyrics View */
 .lyrics-player {
   width: 100%;
   min-height: 100vh;
@@ -478,27 +479,41 @@ body {
   padding: 20px;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin: 20px 0;
+  max-height: 60vh;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .lyrics-container p {
-  margin: 10px 0;
+  margin: 15px 0;
   font-size: 18px;
   line-height: 1.6;
   color: #fff;
-  opacity: 0.9;
+  opacity: 0.7;
   text-align: center;
+  transition: all 0.3s ease;
 }
 
 .lyrics-container p.section {
+  font-size: 16px;
   font-weight: bold;
+  color: #b3b3b3;
   opacity: 1;
+  margin: 20px 0;
 }
 
 .lyrics-container p.active {
   color: #6b48ff;
   font-weight: bold;
   opacity: 1;
+  font-size: 20px;
+  transform: scale(1.05);
+}
+
+.lyrics-container p.active.section {
+  color: #6b48ff;
+  font-size: 18px;
 }
 
 /* Offcanvas */

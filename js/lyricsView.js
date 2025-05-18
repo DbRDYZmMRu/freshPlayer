@@ -8,6 +8,7 @@ export class LyricsView {
     this.lyricsSongTitle = document.getElementById('lyrics-song-title');
     this.lyricsArtist = document.getElementById('lyrics-artist');
     this.lyricsContainer = document.getElementById('lyrics-container');
+    this.debounceTimeout = null;
   }
   
   init(applyGradient) {
@@ -33,10 +34,10 @@ export class LyricsView {
     this.lyricsContainer.innerHTML = '';
     if (song.lyrics.length > 0) {
       song.lyrics.forEach(({ line, timestamp }) => {
-        if (line.trim() !== '') {
+        if (line.trim() !== '' && timestamp !== '0') {
           const p = document.createElement('p');
           p.textContent = line;
-          p.dataset.timestamp = timestamp;
+          p.dataset.timestamp = parseFloat(timestamp);
           p.classList.add('lyric-line');
           if (line.startsWith('[') && line.endsWith(']')) {
             p.classList.add('section');
@@ -52,26 +53,53 @@ export class LyricsView {
   }
   
   syncLyrics() {
-    const currentTime = this.songState.audio.currentTime;
-    const lyrics = this.songState.getState().currentSong.lyrics;
-    let currentLine = null;
-    for (let i = lyrics.length - 1; i >= 0; i--) {
-      if (currentTime >= parseFloat(lyrics[i].timestamp)) {
-        currentLine = lyrics[i];
-        break;
+    if (this.debounceTimeout) return; // Debounce updates
+    this.debounceTimeout = setTimeout(() => {
+      const currentTime = this.songState.audio.currentTime;
+      const lyrics = this.songState.getState().currentSong.lyrics.filter(
+        ({ line, timestamp }) => line.trim() !== '' && timestamp !== '0'
+      );
+      
+      let currentLine = null;
+      for (let i = 0; i < lyrics.length; i++) {
+        const currentTimestamp = parseFloat(lyrics[i].timestamp);
+        const nextTimestamp = i < lyrics.length - 1 ? parseFloat(lyrics[i + 1].timestamp) : Infinity;
+        if (currentTime >= currentTimestamp && currentTime < nextTimestamp) {
+          currentLine = lyrics[i];
+          break;
+        }
       }
-    }
-    this.lyricsContainer.querySelectorAll('.lyric-line').forEach(line => {
-      line.classList.remove('active');
-      if (currentLine && line.dataset.timestamp === currentLine.timestamp) {
-        line.classList.add('active');
-        line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      
+      const lyricElements = this.lyricsContainer.querySelectorAll('.lyric-line');
+      lyricElements.forEach(line => {
+        line.classList.remove('active');
+        if (currentLine && parseFloat(line.dataset.timestamp) === parseFloat(currentLine.timestamp)) {
+          line.classList.add('active');
+          this.scrollToLyric(line);
+        }
+      });
+      
+      this.debounceTimeout = null;
+    }, 100); // Update every 100ms
+  }
+  
+  scrollToLyric(line) {
+    const container = this.lyricsContainer;
+    const containerHeight = container.clientHeight;
+    const lineHeight = line.offsetHeight;
+    const lineTop = line.offsetTop;
+    const scrollPosition = lineTop - (containerHeight / 2) + (lineHeight / 2);
+    
+    container.scrollTo({
+      top: scrollPosition,
+      behavior: 'smooth'
     });
   }
   
   bindEvents() {
-    this.backBtn.addEventListener('click', () => {
+    this.backBtn.addEventListener('click', (e) => {
+      console.log('Lyrics back button clicked');
+      e.stopPropagation();
       this.lyricsPlayer.classList.remove('active');
       document.getElementById('detailed-player').classList.add('active');
       const img = document.getElementById('detailed-album-art');
