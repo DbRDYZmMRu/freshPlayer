@@ -22,14 +22,14 @@ export class TracklistView {
     this.offcanvasTitle = this.offcanvasElement.querySelector('.offcanvas-title');
     this.isTransitioning = false;
   }
-
+  
   init() {
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
     this.bindEvents();
     this.updateNavbar();
   }
-
+  
   updateUI(state) {
     const album = state.currentAlbum;
     if (album) {
@@ -62,13 +62,24 @@ export class TracklistView {
     this.playbackCover.src = state.currentSong.thumbnail;
     this.playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
   }
-
+  
+  // tracklistView.js (only showing modified bindEvents)
   bindEvents() {
     this.playbackControl.addEventListener('click', e => {
       e.stopPropagation();
       this.songState.togglePlay();
     });
-
+    
+    this.playbackOverlay.addEventListener('click', e => {
+      if (e.target.classList.contains('playback-control')) return;
+      if (this.songState.getState().currentSong.title === 'Select a track') return;
+      this.tracklistView.classList.add('hidden');
+      document.getElementById('detailed-player').classList.add('active');
+      this.playbackOverlay.style.display = 'none';
+      const img = document.getElementById('detailed-album-art');
+      img.onload = () => this.applyGradient(img);
+    });
+    
     this.tracklist.addEventListener('click', e => {
       const item = e.target.closest('.tracklist-item');
       if (item && !e.target.classList.contains('menu-icon')) {
@@ -83,14 +94,14 @@ export class TracklistView {
         img.onload = () => this.applyGradient(img);
       }
     });
-
+    
     this.backBtn.addEventListener('click', () => {
       this.tracklistView.classList.add('hidden');
       document.getElementById('home-view').classList.remove('hidden');
       document.getElementById('playback-overlay').style.display = 'flex';
       document.body.style.background = 'linear-gradient(to bottom, #1e1e2f, #2a2a4a)';
     });
-
+    
     document.querySelectorAll('.menu-icon').forEach(icon => {
       icon.addEventListener('click', e => {
         e.stopPropagation();
@@ -99,11 +110,11 @@ export class TracklistView {
         this.offcanvas.show();
       });
     });
-
+    
     window.addEventListener('scroll', this.debounce(this.updateNavbar.bind(this), 150));
     window.addEventListener('resize', this.updateNavbar.bind(this));
   }
-
+  
   applyGradient(image) {
     const colorThief = new ColorThief();
     try {
@@ -119,16 +130,17 @@ export class TracklistView {
       document.body.style.background = 'linear-gradient(to bottom, #d4a5d9, #6b48ff)';
     }
   }
-
+  
   adjustSaturation(rgb, saturationIncrease = 20) {
     const [h, s, l] = this.rgbToHsl(rgb[0], rgb[1], rgb[2]);
     const newSaturation = Math.min(100, s + saturationIncrease);
     return this.hslToRgb(h, newSaturation, l);
   }
-
+  
   rgbToHsl(r, g, b) {
     r /= 255, g /= 255, b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const max = Math.max(r, g, b),
+      min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
     if (max === min) {
       h = s = 0;
@@ -136,15 +148,21 @@ export class TracklistView {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       switch (max) {
-        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-        case g: h = (b - r) / d + 2; break;
-        case b: h = (r - g) / d + 4; break;
+        case r:
+          h = (g - b) / d + (g < b ? 6 : 0);
+          break;
+        case g:
+          h = (b - r) / d + 2;
+          break;
+        case b:
+          h = (r - g) / d + 4;
+          break;
       }
       h /= 6;
     }
     return [h * 360, s * 100, l * 100];
   }
-
+  
   hslToRgb(h, s, l) {
     h /= 360, s /= 100, l /= 100;
     let r, g, b;
@@ -154,27 +172,27 @@ export class TracklistView {
       const hue2rgb = (p, q, t) => {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
         return p;
       };
       const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
+      r = hue2rgb(p, q, h + 1 / 3);
       g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
+      b = hue2rgb(p, q, h - 1 / 3);
     }
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
-
+  
   rgbToCssColor(rgb) {
     return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
   }
-
+  
   debounce(func, wait) {
     let timeout;
-    return function (...args) {
+    return function(...args) {
       const later = () => {
         clearTimeout(timeout);
         func.apply(this, args);
@@ -183,12 +201,12 @@ export class TracklistView {
       timeout = setTimeout(later, wait);
     };
   }
-
+  
   updateNavbar() {
     if (this.isTransitioning || !this.tracklistView.classList.contains('hidden')) {
       const tracklistTop = this.tracklist.getBoundingClientRect().top;
       const snapThreshold = 50;
-
+      
       if (tracklistTop <= snapThreshold && !this.navbar.classList.contains('show')) {
         this.isTransitioning = true;
         this.albumArtContainer.classList.add('transitioning');
@@ -216,11 +234,11 @@ export class TracklistView {
       }
     }
   }
-
+  
   show() {
     this.tracklistView.classList.remove('hidden');
   }
-
+  
   hide() {
     this.tracklistView.classList.add('hidden');
   }

@@ -1,3 +1,4 @@
+// detailedView.js
 export class DetailedView {
   constructor(songState) {
     this.songState = songState;
@@ -10,7 +11,12 @@ export class DetailedView {
     this.detailedCurrentTime = document.getElementById('detailed-current-time');
     this.detailedTotalTime = document.getElementById('detailed-total-time');
     this.progressBar = this.detailedPlayer.querySelector('.progress-bar');
+    this.progressContainer = this.detailedPlayer.querySelector('.progress');
     this.lyricsBtn = document.getElementById('lyrics-btn');
+    this.prevBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏮️"]');
+    this.nextBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏭️"]');
+    this.rewindBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏪"]');
+    this.forwardBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏩"]');
   }
   
   init(applyGradient) {
@@ -46,11 +52,22 @@ export class DetailedView {
     this.detailedTotalTime.textContent = song.duration;
     this.detailedCurrentTime.textContent = song.currentTime;
     this.detailedPlayBtn.textContent = song.isPlaying ? '⏸' : '▶';
-    this.progressBar.style.width = '0%';
+    this.progressBar.style.width = `${song.progress || 0}%`;
   }
   
   bindEvents() {
     this.detailedPlayBtn.addEventListener('click', () => this.songState.togglePlay());
+    this.prevBtn.addEventListener('click', () => this.songState.playPrevious());
+    this.nextBtn.addEventListener('click', () => this.songState.playNext());
+    this.rewindBtn.addEventListener('click', () => this.songState.seek(-10));
+    this.forwardBtn.addEventListener('click', () => this.songState.seek(10));
+    this.progressContainer.addEventListener('click', (e) => {
+      const rect = this.progressContainer.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const width = rect.width;
+      const percentage = clickX / width;
+      this.songState.seekTo(percentage);
+    });
     this.backBtn.addEventListener('click', () => {
       this.detailedPlayer.classList.remove('active');
       document.getElementById('tracklist-view').classList.remove('hidden');
