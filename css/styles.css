@@ -436,7 +436,6 @@ body {
 }
 
 /* Lyrics View */
-/* Lyrics View */
 .lyrics-player {
   width: 100%;
   min-height: 100vh;
@@ -471,6 +470,8 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 20px 15px;
+  box-sizing: border-box;
 }
 
 .lyrics-container {
@@ -482,7 +483,7 @@ body {
   margin: 20px 0;
   max-height: 60vh;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 .lyrics-container p {
@@ -493,6 +494,12 @@ body {
   opacity: 0.7;
   text-align: center;
   transition: all 0.3s ease;
+}
+
+.lyrics-container p.static-lyric {
+  opacity: 0.9;
+  font-size: 18px;
+  margin: 10px 0;
 }
 
 .lyrics-container p.section {
@@ -514,6 +521,52 @@ body {
 .lyrics-container p.active.section {
   color: #6b48ff;
   font-size: 18px;
+}
+
+.lyrics-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.lyrics-progress .progress {
+  height: 5px;
+  width: 100%;
+  max-width: 300px;
+  background-color: #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.lyrics-progress .progress-bar {
+  height: 100%;
+  background-color: #6b48ff;
+  border-radius: 5px;
+  transition: width 0.1s linear;
+}
+
+.lyrics-progress .progress-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #6b48ff;
+  border-radius: 50%;
+  position: absolute;
+  top: -2.5px;
+  right: -5px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.lyrics-progress .time {
+  font-size: 12px;
+  color: #fff;
+  opacity: 0.9;
+  width: 40px;
+  text-align: center;
 }
 
 /* Offcanvas */
