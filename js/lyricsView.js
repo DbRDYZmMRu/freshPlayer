@@ -12,6 +12,13 @@ export class LyricsView {
     this.lyricsProgressBar = this.lyricsPlayer.querySelector('.lyrics-progress .progress-bar');
     this.lyricsCurrentTime = document.getElementById('lyrics-current-time');
     this.lyricsTotalTime = document.getElementById('lyrics-total-time');
+    this.lyricsPlayBtn = document.getElementById('lyrics-play-btn');
+    this.lyricsShuffleBtn = document.getElementById('lyrics-shuffle-btn');
+    this.lyricsRepeatBtn = document.getElementById('lyrics-repeat-btn');
+    this.lyricsPrevBtn = document.getElementById('lyrics-prev-btn');
+    this.lyricsNextBtn = document.getElementById('lyrics-next-btn');
+    this.lyricsRewindBtn = document.getElementById('lyrics-rewind-btn');
+    this.lyricsForwardBtn = document.getElementById('lyrics-forward-btn');
     this.debounceTimeout = null;
     this.isStaticLyrics = false;
   }
@@ -41,8 +48,7 @@ export class LyricsView {
     this.lyricsBackground.style.backgroundImage = `url(${song.cover})`;
     this.lyricsContainer.innerHTML = '';
     
-    // Check if all timestamps are "0"
-    const validLyrics = song.lyrics.filter(({ line, timestamp }) => line.trim() !== '');
+    const validLyrics = song.lyrics.filter(({ line }) => line.trim() !== '');
     this.isStaticLyrics = validLyrics.length > 0 && validLyrics.every(({ timestamp }) => timestamp === '0');
     
     if (validLyrics.length > 0) {
@@ -68,10 +74,13 @@ export class LyricsView {
       this.lyricsContainer.appendChild(p);
     }
     
-    // Update time displays
     this.lyricsCurrentTime.textContent = song.currentTime;
     this.lyricsTotalTime.textContent = song.duration;
     this.lyricsProgressBar.style.width = `${song.progress || 0}%`;
+    this.lyricsPlayBtn.textContent = song.isPlaying ? '⏸' : '▶️';
+    this.lyricsShuffleBtn.classList.toggle('active', state.shuffle);
+    this.lyricsRepeatBtn.textContent = state.repeat === 'one' ? '🔂' : '🔁';
+    this.lyricsRepeatBtn.classList.toggle('active', state.repeat !== 'off');
   }
   
   syncLyrics() {
@@ -101,7 +110,6 @@ export class LyricsView {
         }
       });
       
-      // Clear highlight before first lyric or after last
       if (!currentLine && lyrics.length > 0) {
         const firstTimestamp = parseFloat(lyrics[0].timestamp);
         const lastTimestamp = parseFloat(lyrics[lyrics.length - 1].timestamp);
@@ -119,7 +127,6 @@ export class LyricsView {
     const containerHeight = container.clientHeight;
     const lineHeight = line.offsetHeight;
     const lineTop = line.offsetTop;
-    // Center the lyric, keeping past lyrics visible
     const scrollPosition = lineTop - (containerHeight / 2) + (lineHeight / 2);
     
     container.scrollTo({
@@ -136,17 +143,26 @@ export class LyricsView {
   }
   
   bindEvents() {
-    this.backBtn.addEventListener('click', (e) => {
-      console.log('Lyrics back button clicked');
-      e.stopPropagation();
-      this.lyricsPlayer.classList.remove('active');
-      document.getElementById('detailed-player').classList.add('active');
-      const img = document.getElementById('detailed-album-art');
-      img.onload = () => applyGradient(img);
+    const buttons = [this.backBtn, this.lyricsPlayBtn, this.lyricsShuffleBtn, this.lyricsRepeatBtn, this.lyricsPrevBtn, this.lyricsNextBtn, this.lyricsRewindBtn, this.lyricsForwardBtn];
+    buttons.forEach(btn => {
+      if (btn && btn._handler) {
+        btn.removeEventListener('click', btn._handler);
+        btn._handler = null;
+      }
     });
     
+    if (this.backBtn) {
+      this.backBtn._handler = (e) => {
+        console.log('Lyrics back button clicked');
+        e.stopPropagation();
+        this.lyricsPlayer.classList.remove('active');
+        document.getElementById('detailed-player').classList.add('active');
+      };
+      this.backBtn.addEventListener('click', this.backBtn._handler);
+    }
+    
     if (this.lyricsProgress) {
-      this.lyricsProgress.addEventListener('click', (e) => {
+      this.lyricsProgress._handler = (e) => {
         console.log('Lyrics progress bar clicked');
         e.stopPropagation();
         const rect = this.lyricsProgress.getBoundingClientRect();
@@ -154,7 +170,64 @@ export class LyricsView {
         const width = rect.width;
         const percentage = clickX / width;
         this.songState.seekTo(percentage);
-      });
+      };
+      this.lyricsProgress.addEventListener('click', this.lyricsProgress._handler);
+    }
+    
+    if (this.lyricsPlayBtn) {
+      this.lyricsPlayBtn._handler = () => {
+        console.log('Lyrics play button clicked');
+        this.songState.togglePlay();
+      };
+      this.lyricsPlayBtn.addEventListener('click', this.lyricsPlayBtn._handler);
+    }
+    
+    if (this.lyricsShuffleBtn) {
+      this.lyricsShuffleBtn._handler = () => {
+        console.log('Shuffle button clicked');
+        this.songState.toggleShuffle();
+      };
+      this.lyricsShuffleBtn.addEventListener('click', this.lyricsShuffleBtn._handler);
+    }
+    
+    if (this.lyricsRepeatBtn) {
+      this.lyricsRepeatBtn._handler = () => {
+        console.log('Repeat button clicked');
+        this.songState.toggleRepeat();
+      };
+      this.lyricsRepeatBtn.addEventListener('click', this.lyricsRepeatBtn._handler);
+    }
+    
+    if (this.lyricsPrevBtn) {
+      this.lyricsPrevBtn._handler = () => {
+        console.log('Previous button clicked');
+        this.songState.playPrevious();
+      };
+      this.lyricsPrevBtn.addEventListener('click', this.lyricsPrevBtn._handler);
+    }
+    
+    if (this.lyricsNextBtn) {
+      this.lyricsNextBtn._handler = () => {
+        console.log('Next button clicked');
+        this.songState.playNext();
+      };
+      this.lyricsNextBtn.addEventListener('click', this.lyricsNextBtn._handler);
+    }
+    
+    if (this.lyricsRewindBtn) {
+      this.lyricsRewindBtn._handler = () => {
+        console.log('Rewind button clicked');
+        this.songState.seek(-10);
+      };
+      this.lyricsRewindBtn.addEventListener('click', this.lyricsRewindBtn._handler);
+    }
+    
+    if (this.lyricsForwardBtn) {
+      this.lyricsForwardBtn._handler = () => {
+        console.log('Forward button clicked');
+        this.songState.seek(10);
+      };
+      this.lyricsForwardBtn.addEventListener('click', this.lyricsForwardBtn._handler);
     }
   }
   

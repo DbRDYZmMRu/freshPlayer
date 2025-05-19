@@ -13,6 +13,8 @@ export class DetailedView {
     this.progressBar = this.detailedPlayer.querySelector('.progress-bar');
     this.progressContainer = this.detailedPlayer.querySelector('.progress');
     this.lyricsBtn = document.getElementById('lyrics-btn');
+    this.shuffleBtn = document.getElementById('shuffle-btn');
+    this.repeatBtn = document.getElementById('repeat-btn');
     this.prevBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏮️"]');
     this.nextBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏭️"]');
     this.rewindBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏪"]');
@@ -20,8 +22,8 @@ export class DetailedView {
   }
   
   init(applyGradient) {
-    if (!this.backBtn || !this.lyricsBtn) {
-      console.error('Back or lyrics button not found in DOM');
+    if (!this.backBtn || !this.lyricsBtn || !this.shuffleBtn || !this.repeatBtn) {
+      console.error('Button not found in DOM');
     }
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
@@ -46,23 +48,24 @@ export class DetailedView {
     this.detailedSongTitle.textContent = song.title;
     this.detailedArtist.textContent = song.artist;
     const coverUrl = song.cover && typeof song.cover === 'string' && song.cover.startsWith('http') ?
-      song.cover :
-      '/images/placeholder.jpg';
+      song.cover : '/images/placeholder.jpg';
     if (this.detailedAlbumArt.src !== coverUrl) {
       console.log(`Setting album art to: ${coverUrl}`);
       this.detailedAlbumArt.src = coverUrl;
     }
     this.detailedTotalTime.textContent = song.duration;
     this.detailedCurrentTime.textContent = song.currentTime;
-    this.detailedPlayBtn.textContent = song.isPlaying ? '⏸' : '▶';
+    this.detailedPlayBtn.textContent = song.isPlaying ? '⏸' : '▶️';
     this.progressBar.style.width = `${song.progress || 0}%`;
+    this.shuffleBtn.classList.toggle('active', state.shuffle);
+    this.repeatBtn.textContent = state.repeat === 'one' ? '🔂' : '🔁';
+    this.repeatBtn.classList.toggle('active', state.repeat !== 'off');
   }
   
   bindEvents() {
-    // Remove existing listeners to prevent duplicates
-    const buttons = [this.detailedPlayBtn, this.prevBtn, this.nextBtn, this.rewindBtn, this.forwardBtn, this.backBtn, this.lyricsBtn];
+    const buttons = [this.detailedPlayBtn, this.prevBtn, this.nextBtn, this.rewindBtn, this.forwardBtn, this.backBtn, this.lyricsBtn, this.shuffleBtn, this.repeatBtn];
     buttons.forEach(btn => {
-      if (btn) {
+      if (btn && btn._handler) {
         btn.removeEventListener('click', btn._handler);
         btn._handler = null;
       }
@@ -147,11 +150,26 @@ export class DetailedView {
       };
       this.lyricsBtn.addEventListener('click', this.lyricsBtn._handler);
     }
+    
+    if (this.shuffleBtn) {
+      this.shuffleBtn._handler = () => {
+        console.log('Shuffle button clicked');
+        this.songState.toggleShuffle();
+      };
+      this.shuffleBtn.addEventListener('click', this.shuffleBtn._handler);
+    }
+    
+    if (this.repeatBtn) {
+      this.repeatBtn._handler = () => {
+        console.log('Repeat button clicked');
+        this.songState.toggleRepeat();
+      };
+      this.repeatBtn.addEventListener('click', this.repeatBtn._handler);
+    }
   }
   
   show() {
     this.detailedPlayer.classList.add('active');
-    // Rebind events to ensure interactivity
     this.bindEvents();
   }
   
