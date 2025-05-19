@@ -3,7 +3,7 @@ export class DetailedView {
   constructor(songState) {
     this.songState = songState;
     this.detailedPlayer = document.getElementById('detailed-player');
-    this.backBtn = document.getElementById('back-btn');
+    this.toggleBtn = document.getElementById('detailed-toggle-btn');
     this.albumArt = document.getElementById('detailed-album-art');
     this.songTitle = document.getElementById('detailed-song-title');
     this.artist = document.getElementById('detailed-artist');
@@ -17,8 +17,8 @@ export class DetailedView {
     this.nextBtn = document.getElementById('next-btn');
     this.forwardBtn = document.getElementById('forward-btn');
     this.repeatBtn = document.getElementById('repeat-btn');
-    this.themeBtn = document.querySelector('#detailed-player .bottom-controls:not([id])'); // 🌙
-    this.detailsBtn = document.querySelectorAll('#detailed-player .bottom-controls:not([id])')[1]; // 📜
+    this.themeBtn = document.querySelector('#detailed-player .bottom-controls:not([id])');
+    this.detailsBtn = document.querySelectorAll('#detailed-player .bottom-controls:not([id])')[1];
     this.progressBar = document.querySelector('#detailed-player .progress-bar');
     this.progressDot = document.querySelector('#detailed-player .progress-dot');
     this.currentTime = document.getElementById('detailed-current-time');
@@ -37,12 +37,13 @@ export class DetailedView {
   
   render(state = this.songState.getState()) {
     try {
-      const { currentSong, favourites, shuffle, repeat } = state;
-      this.albumArt.src = currentSong.thumbnail || '/images/placeholder.jpg';
+      const { currentSong, albums, favourites, shuffle, repeat } = state;
+      const album = albums.find(a => a.id === currentSong.album_id);
+      this.albumArt.src = album?.cover || '/images/placeholder.jpg'; // Album cover
       this.songTitle.textContent = currentSong.title || 'Select a track';
       this.artist.textContent = currentSong.artist || 'Frith Hilton';
-      this.currentTime.textContent = currentSong.currentTime || '00:00';
-      this.totalTime.textContent = currentSong.duration || '00:00';
+      this.currentTime.textContent = currentSong.currentTime || '0:00';
+      this.totalTime.textContent = currentSong.duration || '0:00';
       if (this.progressBar) {
         this.progressBar.style.width = `${currentSong.progress || 0}%`;
       }
@@ -66,8 +67,9 @@ export class DetailedView {
   
   bindEvents() {
     try {
-      if (this.backBtn) {
-        this.backBtn.addEventListener('click', () => {
+      if (this.toggleBtn) {
+        this.toggleBtn.addEventListener('click', () => {
+          console.log('Toggle to previous allowed view clicked');
           this.songState.popView();
         });
       }
@@ -138,7 +140,6 @@ export class DetailedView {
       if (this.themeBtn) {
         this.themeBtn.addEventListener('click', () => {
           console.log('Theme toggle clicked (unimplemented)');
-          // Placeholder: Toggle light/dark mode
           document.body.classList.toggle('light-theme');
         });
       }
@@ -146,7 +147,6 @@ export class DetailedView {
       if (this.detailsBtn) {
         this.detailsBtn.addEventListener('click', () => {
           console.log('View details clicked (unimplemented)');
-          // Placeholder: Navigate to track details view
           alert('Track details view not implemented');
         });
       }

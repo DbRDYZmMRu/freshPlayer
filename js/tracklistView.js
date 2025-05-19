@@ -12,7 +12,7 @@ export class TracklistView {
     this.titleElement = this.header?.querySelector('.title') || document.getElementById('album-title');
     this.subtitleElement = this.header?.querySelector('.subtitle') || document.getElementById('album-release');
     this.navbarTitle = this.navbar?.querySelector('.album-name') || document.getElementById('navbar-album-name');
-    this.backBtn = this.container.querySelector('.back-btn') || document.getElementById('tracklist-back-btn');
+    this.backBtn = document.getElementById('tracklist-back-btn');
     this.playbackOverlay = document.getElementById('playback-overlay');
     this.playbackCover = this.playbackOverlay.querySelector('.playback-cover');
     this.playbackTitle = this.playbackOverlay.querySelector('.playback-title');
@@ -24,7 +24,7 @@ export class TracklistView {
     this.title = title;
     this.tracksKey = tracksKey;
     this.type = type;
-    this.applyGradientCallback = applyGradientCallback; // Callback for gradient
+    this.applyGradientCallback = applyGradientCallback;
     this.isTransitioning = false;
   }
   
@@ -65,7 +65,7 @@ export class TracklistView {
       .map((song, index) => `
         <div class="tracklist-item ${state.currentSong.id === song.id ? 'active' : ''}" data-track="${index + 1}" data-song-id="${song.id}" data-title="${song.title}" data-duration="${song.duration}" ${this.type === 'playlist' ? 'draggable="true"' : ''}>
           <div class="track-info">
-            <img src="${song.thumbnail}" class="track-thumbnail" alt="${song.title}">
+            <img src="${song.cover || '/images/placeholder.jpg'}" class="track-thumbnail" alt="${song.title}">
             <span class="track-number opacity-75">${index + 1}</span>
             <div class="track-details">
               <div class="track-title">${song.title}</div>
@@ -79,7 +79,8 @@ export class TracklistView {
     
     this.playbackTitle.textContent = state.currentSong.title;
     this.playbackAlbum.textContent = state.currentSong.album;
-    this.playbackCover.src = state.currentSong.thumbnail;
+    const currentAlbum = state.albums.find(a => a.id === state.currentSong.album_id);
+    this.playbackCover.src = currentAlbum?.cover || '/images/placeholder.jpg';
     this.playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
   }
   
@@ -120,7 +121,6 @@ export class TracklistView {
     }
     
     if (this.tracklist) {
-      // ... (drag-and-drop, remove-song unchanged) ...
       this.tracklist._handler = e => {
         const item = e.target.closest('.tracklist-item');
         if (item && !e.target.classList.contains('menu-icon') && !e.target.classList.contains('remove-song')) {
@@ -139,6 +139,12 @@ export class TracklistView {
         }
       };
       this.tracklist.addEventListener('click', this.tracklist._handler);
+    }
+    
+    if (this.backBtn) {
+      this.backBtn.addEventListener('click', () => {
+        this.songState.popView();
+      });
     }
     
     document.querySelectorAll('.menu-icon').forEach(icon => {

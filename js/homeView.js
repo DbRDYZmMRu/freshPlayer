@@ -119,7 +119,7 @@ export class HomeView {
       .filter(song => song)
       .map(song => `
             <div class="playlist-item" data-song-id="${song.id}">
-              <img src="${song.thumbnail}" alt="${song.title}">
+              <img src="${song.cover || '/images/placeholder.jpg'}" alt="${song.title}">
               <div class="track-title">${song.title}</div>
               <div class="track-artist">${song.artist}</div>
             </div>

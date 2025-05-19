@@ -26,7 +26,6 @@ class App {
     this.bindGlobalEvents();
   }
   
-  
   handleNavigation(state) {
     const currentViewId = state.navigationHistory[state.navigationHistory.length - 1];
     if (currentViewId !== this.currentView) {
@@ -39,9 +38,23 @@ class App {
       }
     }
   }
+  
   bindGlobalEvents() {
     const playbackOverlay = document.getElementById('playback-overlay');
     if (playbackOverlay) {
+      const playbackCover = playbackOverlay.querySelector('.playback-cover');
+      const playbackTitle = playbackOverlay.querySelector('.playback-title');
+      const playbackAlbum = playbackOverlay.querySelector('.playback-album');
+      const playbackControl = document.getElementById('playback-control');
+      
+      this.songState.subscribe(state => {
+        const album = state.albums.find(a => a.id === state.currentSong.album_id);
+        playbackCover.src = album?.cover || '/images/placeholder.jpg';
+        playbackTitle.textContent = state.currentSong.title || 'Select a track';
+        playbackAlbum.textContent = state.currentSong.album || 'Unknown';
+        playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
+      });
+      
       playbackOverlay.addEventListener('click', e => {
         if (e.target.closest('.playback-control') || this.songState.getState().currentSong.title === 'Select a track') return;
         this.songState.pushView('detailed-player');
@@ -54,6 +67,13 @@ class App {
           img.onload = () => this.views['home-view'].applyGradient(img);
         }
       });
+      
+      if (playbackControl) {
+        playbackControl.addEventListener('click', e => {
+          e.stopPropagation();
+          this.songState.togglePlay();
+        });
+      }
     }
     
     const globalBackBtn = document.getElementById('global-back-btn');
@@ -166,7 +186,6 @@ class App {
         if (success) {
           const modal = bootstrap.Modal.getInstance(playlistModal);
           modal?.hide();
-          // Clean up backdrop
           document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
           document.body.classList.remove('modal-open');
           document.body.style.overflow = '';

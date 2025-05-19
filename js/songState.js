@@ -27,7 +27,7 @@ export class SongState {
     this.loadData();
     this.initAudioEvents();
   }
-  
+
   initAudioEvents() {
     this.audio.addEventListener('timeupdate', () => this.updateProgress());
     this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
@@ -38,13 +38,13 @@ export class SongState {
       this.notify();
     });
   }
-  
+
   async loadData() {
     const CACHE_KEY = 'albumData';
     const CACHE_DURATION = 24 * 60 * 60 * 1000;
     const cachedData = localStorage.getItem(CACHE_KEY);
     const savedState = localStorage.getItem('playerState');
-    
+
     if (savedState) {
       try {
         const { favourites, playlists, queue, recentlyPlayed, shuffle, repeat } = JSON.parse(savedState);
@@ -58,7 +58,7 @@ export class SongState {
         console.error('Error parsing saved state:', error);
       }
     }
-    
+
     if (cachedData) {
       try {
         const { data, timestamp } = JSON.parse(cachedData);
@@ -73,7 +73,7 @@ export class SongState {
         console.error('Error parsing cached data:', error);
       }
     }
-    
+
     try {
       const allTracks = [];
       const albumsWithTracks = await Promise.all(albums.map(async album => {
@@ -112,21 +112,14 @@ export class SongState {
             if (!data) {
               throw new Error(`All name formats failed for ${track}: ${lastError?.message || 'Unknown error'}`);
             }
-            const defaultCover = '/images/placeholder.jpg';
-            const coverUrl = data.cover && typeof data.cover === 'string' && data.cover.startsWith('http') ?
-              data.cover :
-              defaultCover;
-            const thumbnailUrl = coverUrl !== defaultCover && coverUrl.includes('/musicpool/covers/') ?
-              coverUrl.replace('/musicpool/covers/', '/musicpool/thumbnails/') :
-              coverUrl;
             const trackData = {
               id: data.id || `${album.name}-${track.replace(/[^a-zA-Z0-9]/g, '')}`,
               title: data.song_title || track,
               artist: data.writer || 'Frith Hilton',
               album: album.name,
               album_id: album.name,
-              cover: coverUrl,
-              thumbnail: thumbnailUrl,
+              cover: data.cover || '/images/placeholder.jpg', // Track-specific cover
+              thumbnail: data.thumbnail || data.cover || '/images/placeholder.jpg', // Track-specific thumbnail
               duration: data.duration || '03:00',
               lyrics: Array.isArray(data.lyrics) ? data.lyrics : [],
               mp3_url: data.mp3_url || ''
@@ -148,7 +141,7 @@ export class SongState {
           id: album.name,
           title: album.name,
           artist: 'Frith Hilton',
-          cover: validTracks[0]?.thumbnail || album.cover || '/images/placeholder.jpg',
+          cover: album.cover || '/images/placeholder.jpg', // Album cover from albums.js
           release_date: album.releaseDate,
           tracks: validTracks.map(t => t.id)
         };
@@ -166,7 +159,7 @@ export class SongState {
       console.error('Error loading album data:', error);
     }
   }
-  
+
   saveState() {
     try {
       localStorage.setItem('playerState', JSON.stringify({
@@ -182,7 +175,7 @@ export class SongState {
       console.error('Error saving state:', error);
     }
   }
-  
+
   notify() {
     this.subscribers.forEach(callback => {
       try {
@@ -192,7 +185,7 @@ export class SongState {
       }
     });
   }
-  
+
   setSong(songId, fromQueue = false) {
     const song = this.state.songs.find(s => String(s.id) === String(songId)) || this.state.currentSong;
     const album = this.state.albums.find(a => a.id === song.album_id);
@@ -216,7 +209,7 @@ export class SongState {
       this.notify();
     });
   }
-  
+
   setAlbum(albumId) {
     const album = this.state.albums.find(a => a.id === albumId) || null;
     this.state.currentAlbum = album;
@@ -227,7 +220,7 @@ export class SongState {
     this.saveState();
     this.notify();
   }
-  
+
   togglePlay() {
     if (!this.state.currentSong.mp3_url) return;
     if (!this.hasStarted) {
@@ -251,39 +244,39 @@ export class SongState {
     this.saveState();
     this.notify();
   }
-  
+
   toggleShuffle() {
     this.state.shuffle = !this.state.shuffle;
     this.saveState();
     this.notify();
   }
-  
+
   toggleRepeat() {
     const modes = ['off', 'all', 'one'];
     this.state.repeat = modes[(modes.indexOf(this.state.repeat) + 1) % modes.length];
     this.saveState();
     this.notify();
   }
-  
+
   addToQueue(songId) {
     if (!this.state.songs.find(s => s.id === songId)) return;
     this.state.queue = [...this.state.queue, songId];
     this.saveState();
     this.notify();
   }
-  
+
   removeFromQueue(songId) {
     this.state.queue = this.state.queue.filter(id => id !== songId);
     this.saveState();
     this.notify();
   }
-  
+
   clearQueue() {
     this.state.queue = [];
     this.saveState();
     this.notify();
   }
-  
+
   toggleFavourite(songId) {
     if (this.state.favourites.includes(songId)) {
       this.state.favourites = this.state.favourites.filter(id => id !== songId);
@@ -293,7 +286,7 @@ export class SongState {
     this.saveState();
     this.notify();
   }
-  
+
   createPlaylist(name) {
     if (!name || this.state.playlists[name]) {
       console.log(`Playlist "${name}" already exists`);
@@ -304,7 +297,7 @@ export class SongState {
     this.notify();
     return true;
   }
-  
+
   deletePlaylist(name) {
     if (!this.state.playlists[name]) return false;
     delete this.state.playlists[name];
@@ -312,7 +305,7 @@ export class SongState {
     this.notify();
     return true;
   }
-  
+
   renamePlaylist(oldName, newName) {
     if (!this.state.playlists[oldName] || !newName || this.state.playlists[newName]) {
       console.log(`Cannot rename "${oldName}" to "${newName}": invalid or exists`);
@@ -324,7 +317,7 @@ export class SongState {
     this.notify();
     return true;
   }
-  
+
   addToPlaylist(playlistName, songId) {
     if (!this.state.playlists[playlistName] || !this.state.songs.find(s => s.id === songId)) {
       console.log(`Invalid playlist "${playlistName}" or song "${songId}"`);
@@ -337,7 +330,7 @@ export class SongState {
     }
     return true;
   }
-  
+
   removeSongFromPlaylist(playlistName, songId) {
     if (!this.state.playlists[playlistName]) return false;
     this.state.playlists[playlistName] = this.state.playlists[playlistName].filter(id => id !== songId);
@@ -345,7 +338,7 @@ export class SongState {
     this.notify();
     return true;
   }
-  
+
   reorderPlaylist(playlistName, newOrder) {
     if (!this.state.playlists[playlistName]) return false;
     const validOrder = newOrder.filter(id => this.state.playlists[playlistName].includes(id));
@@ -355,37 +348,54 @@ export class SongState {
     this.notify();
     return true;
   }
-  
+
   pushView(viewId) {
     this.state.navigationHistory.push(viewId);
     this.saveState();
     this.notify();
   }
-  
+
   popView() {
-    if (this.state.navigationHistory.length > 1) {
-      this.state.navigationHistory.pop();
-      const previousView = this.state.navigationHistory[this.state.navigationHistory.length - 1];
+    if (this.state.navigationHistory.length <= 1) {
+      this.state.navigationHistory = ['home-view'];
       this.saveState();
       this.notify();
-      return previousView;
+      return 'home-view';
+    }
+
+    const notAllowedViews = ['lyrics-player', 'queue-player'];
+    this.state.navigationHistory.pop();
+    let previousView = 'home-view';
+
+    for (let i = this.state.navigationHistory.length - 1; i >= 0; i--) {
+      if (!notAllowedViews.includes(this.state.navigationHistory[i])) {
+        previousView = this.state.navigationHistory[i];
+        break;
+      }
+    }
+
+    this.state.navigationHistory = this.state.navigationHistory.slice(0, this.state.navigationHistory.indexOf(previousView) + 1);
+    this.saveState();
+    this.notify();
+    return previousView;
+  }
+
+  getPreviousAllowedView() {
+    const notAllowedViews = ['lyrics-player', 'queue-player'];
+    for (let i = this.state.navigationHistory.length - 1; i >= 0; i--) {
+      if (!notAllowedViews.includes(this.state.navigationHistory[i])) {
+        return this.state.navigationHistory[i];
+      }
     }
     return 'home-view';
   }
-  
-  // js/songState.js (only showing changed method)
-  getPreviousView() {
-    return this.state.navigationHistory.length > 1 ?
-      this.state.navigationHistory[this.state.navigationHistory.length - 2] :
-      'home-view';
-  }
-  
+
   clearNavigationHistory() {
     this.state.navigationHistory = ['home-view'];
     this.saveState();
     this.notify();
   }
-  
+
   playNext() {
     if (this.state.queue.length > 0) {
       const nextSongId = this.state.queue[0];
@@ -411,7 +421,7 @@ export class SongState {
       this.notify();
     }
   }
-  
+
   playPrevious() {
     if (this.state.queue.length > 0) {
       const nextSongId = this.state.queue[0];
@@ -435,7 +445,7 @@ export class SongState {
       this.notify();
     }
   }
-  
+
   handleSongEnd() {
     if (this.state.repeat === 'one') {
       this.audio.currentTime = 0;
@@ -447,20 +457,20 @@ export class SongState {
       this.playNext();
     }
   }
-  
+
   seek(seconds) {
     if (!this.state.currentSong.mp3_url) return;
     this.audio.currentTime = Math.max(0, Math.min(this.audio.currentTime + seconds, this.audio.duration || Infinity));
     this.notify();
   }
-  
+
   seekTo(percentage) {
     if (this.audio.duration) {
       this.audio.currentTime = percentage * this.audio.duration;
       this.notify();
     }
   }
-  
+
   updateProgress() {
     if (this.audio.duration) {
       const currentTime = this.audio.currentTime;
@@ -475,24 +485,24 @@ export class SongState {
       }
     }
   }
-  
+
   updateDuration() {
     if (this.audio.duration) {
       this.state.currentSong.duration = this.formatTime(this.audio.duration);
       this.notify();
     }
   }
-  
+
   formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
-  
+
   subscribe(callback) {
     this.subscribers.push(callback);
   }
-  
+
   getState() {
     return { ...this.state };
   }

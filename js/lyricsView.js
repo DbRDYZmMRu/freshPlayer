@@ -31,9 +31,11 @@ export class LyricsView {
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
     this.bindEvents();
+    const state = this.songState.getState();
+    const album = state.albums.find(a => a.id === state.currentSong.album_id);
     const tempImg = new Image();
     tempImg.crossOrigin = 'anonymous';
-    tempImg.src = this.songState.getState().currentSong.cover || '/images/placeholder.jpg';
+    tempImg.src = album?.cover || '/images/placeholder.jpg';
     tempImg.addEventListener('load', () => applyGradient(tempImg));
     tempImg.addEventListener('error', () => {
       console.error('Failed to load image for gradient');
@@ -48,9 +50,10 @@ export class LyricsView {
   updateUI(state) {
     try {
       const song = state.currentSong;
+      const album = state.albums.find(a => a.id === song.album_id);
       this.lyricsSongTitle.textContent = song.title || 'Select a track';
       this.lyricsArtist.textContent = song.artist || 'Frith Hilton';
-      this.lyricsBackground.style.backgroundImage = `url(${song.cover || '/images/placeholder.jpg'})`;
+      this.lyricsBackground.style.backgroundImage = `url(${album?.cover || '/images/placeholder.jpg'})`;
       this.lyricsContainer.innerHTML = '';
       
       const validLyrics = song.lyrics?.filter(({ line }) => line.trim() !== '') || [];
