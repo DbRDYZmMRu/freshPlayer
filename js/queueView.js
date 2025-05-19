@@ -27,7 +27,7 @@ export class QueueView {
           if (!song) return '';
           return `
               <div class="track-item d-flex align-items-center p-2" data-song-id="${song.id}">
-                <img src="${song.thumbnail || '/images/placeholder.jpg'}" alt="${song.title}" class="track-thumbnail me-2" style="width: 40px; height: 40px;">
+                <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}" class="track-thumbnail me-2" style="width: 40px; height: 40px;">
                 <div class="track-info">
                   <div class="track-title">${song.title}</div>
                   <div class="track-artist text-muted">${song.artist || 'Frith Hilton'}</div>

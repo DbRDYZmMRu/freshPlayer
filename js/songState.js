@@ -118,8 +118,8 @@ export class SongState {
               artist: data.writer || 'Frith Hilton',
               album: album.name,
               album_id: album.name,
-              cover: data.cover || '/images/placeholder.jpg', // Track-specific cover
-              thumbnail: data.thumbnail || data.cover || '/images/placeholder.jpg', // Track-specific thumbnail
+              cover: data.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png', // Track-specific cover
+              thumbnail: data.thumbnail || data.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png', // Track-specific thumbnail
               duration: data.duration || '03:00',
               lyrics: Array.isArray(data.lyrics) ? data.lyrics : [],
               mp3_url: data.mp3_url || ''
@@ -141,7 +141,7 @@ export class SongState {
           id: album.name,
           title: album.name,
           artist: 'Frith Hilton',
-          cover: album.cover || '/images/placeholder.jpg', // Album cover from albums.js
+          cover: album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png', // Album cover from albums.js
           release_date: album.releaseDate,
           tracks: validTracks.map(t => t.id)
         };

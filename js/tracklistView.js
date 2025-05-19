@@ -46,8 +46,8 @@ export class TracklistView {
         tracks = album.tracks.map(trackId => state.songs.find(s => s.id === trackId)).filter(s => s);
         displayTitle = album.title;
         subtitle = album.release_date.split('-')[0];
-        if (this.mainAlbumArt) this.mainAlbumArt.src = album.cover || '/images/placeholder.jpg';
-        if (this.thumbnailArt) this.thumbnailArt.src = album.cover || '/images/placeholder.jpg';
+        if (this.mainAlbumArt) this.mainAlbumArt.src = album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+        if (this.thumbnailArt) this.thumbnailArt.src = album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
       }
     } else if (this.type === 'queue') {
       tracks = state.queue.map(songId => state.songs.find(s => s.id === songId)).filter(s => s);
@@ -65,7 +65,7 @@ export class TracklistView {
       .map((song, index) => `
         <div class="tracklist-item ${state.currentSong.id === song.id ? 'active' : ''}" data-track="${index + 1}" data-song-id="${song.id}" data-title="${song.title}" data-duration="${song.duration}" ${this.type === 'playlist' ? 'draggable="true"' : ''}>
           <div class="track-info">
-            <img src="${song.cover || '/images/placeholder.jpg'}" class="track-thumbnail" alt="${song.title}">
+            <img src="${song.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" class="track-thumbnail" alt="${song.title}">
             <span class="track-number opacity-75">${index + 1}</span>
             <div class="track-details">
               <div class="track-title">${song.title}</div>
@@ -79,7 +79,7 @@ export class TracklistView {
     
     this.playbackTitle.textContent = state.currentSong.title;
     this.playbackAlbum.textContent = state.currentSong.album;
-    this.playbackCover.src = state.currentSong.cover || '/images/placeholder.jpg';
+    this.playbackCover.src = state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
     this.playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
   }
   

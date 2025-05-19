@@ -25,7 +25,7 @@ bindEvents() {
   }
 }
 
-
+        <img src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" alt="Redirection Image">
 
 
       const createPlaylistBtn = document.getElementById('create-playlist-btn');

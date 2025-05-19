@@ -34,7 +34,7 @@ export class LyricsView {
     const state = this.songState.getState();
     const tempImg = new Image();
     tempImg.crossOrigin = 'anonymous';
-    tempImg.src = state.currentSong.thumbnail || state.currentSong.cover || '/images/placeholder.jpg';
+    tempImg.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
     tempImg.addEventListener('load', () => applyGradient(tempImg));
     tempImg.addEventListener('error', () => {
       console.error('Failed to load image for gradient');
@@ -51,7 +51,7 @@ export class LyricsView {
       const song = state.currentSong;
       this.lyricsSongTitle.textContent = song.title || 'Select a track';
       this.lyricsArtist.textContent = song.artist || 'Frith Hilton';
-      this.lyricsBackground.style.backgroundImage = `url(${song.thumbnail || song.cover || '/images/placeholder.jpg'})`;
+      this.lyricsBackground.style.backgroundImage = `url(${song.thumbnail || song.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'})`;
       this.lyricsContainer.innerHTML = '';
       
       const validLyrics = song.lyrics?.filter(({ line }) => line.trim() !== '') || [];

@@ -48,7 +48,7 @@ class App {
       const playbackControl = document.getElementById('playback-control');
       
       this.songState.subscribe(state => {
-        playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || '/images/placeholder.jpg';
+        playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
         playbackTitle.textContent = state.currentSong.title || 'Select a track';
         playbackAlbum.textContent = state.currentSong.album || 'Unknown';
         playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
