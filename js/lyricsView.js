@@ -19,10 +19,11 @@ export class LyricsView {
     this.lyricsNextBtn = document.getElementById('lyrics-next-btn');
     this.lyricsRewindBtn = document.getElementById('lyrics-rewind-btn');
     this.lyricsForwardBtn = document.getElementById('lyrics-forward-btn');
+    this.lyricsFavouriteBtn = document.getElementById('lyrics-favourite-btn');
+    this.lyricsQueueBtn = document.getElementById('lyrics-queue-btn');
     this.debounceTimeout = null;
     this.isStaticLyrics = false;
   }
-  
   init(applyGradient) {
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
@@ -81,7 +82,9 @@ export class LyricsView {
     this.lyricsShuffleBtn.classList.toggle('active', state.shuffle);
     this.lyricsRepeatBtn.textContent = state.repeat === 'one' ? '🔂' : '🔁';
     this.lyricsRepeatBtn.classList.toggle('active', state.repeat !== 'off');
+    this.lyricsFavouriteBtn.textContent = state.favourites.includes(song.id) ? '❤️' : '🤍';
   }
+  
   
   syncLyrics() {
     if (this.debounceTimeout || this.isStaticLyrics) return;
@@ -143,7 +146,7 @@ export class LyricsView {
   }
   
   bindEvents() {
-    const buttons = [this.backBtn, this.lyricsPlayBtn, this.lyricsShuffleBtn, this.lyricsRepeatBtn, this.lyricsPrevBtn, this.lyricsNextBtn, this.lyricsRewindBtn, this.lyricsForwardBtn];
+    const buttons = [this.backBtn, this.lyricsPlayBtn, this.lyricsShuffleBtn, this.lyricsRepeatBtn, this.lyricsPrevBtn, this.lyricsNextBtn, this.lyricsRewindBtn, this.lyricsForwardBtn, this.lyricsFavouriteBtn, this.lyricsQueueBtn];
     buttons.forEach(btn => {
       if (btn && btn._handler) {
         btn.removeEventListener('click', btn._handler);
@@ -229,6 +232,26 @@ export class LyricsView {
       };
       this.lyricsForwardBtn.addEventListener('click', this.lyricsForwardBtn._handler);
     }
+    
+    if (this.lyricsFavouriteBtn) {
+      this.lyricsFavouriteBtn._handler = () => {
+        console.log('Favourite button clicked');
+        this.songState.toggleFavourite(this.songState.getState().currentSong.id);
+      };
+      this.lyricsFavouriteBtn.addEventListener('click', this.lyricsFavouriteBtn._handler);
+    }
+    
+    if (this.lyricsQueueBtn) {
+      this.lyricsQueueBtn._handler = (e) => {
+        console.log('Queue button clicked');
+        e.stopPropagation();
+        e.preventDefault();
+        this.lyricsPlayer.classList.remove('active');
+        document.getElementById('queue-player').classList.add('active');
+      };
+      this.lyricsQueueBtn.addEventListener('click', this.lyricsQueueBtn._handler);
+    }
+    
   }
   
   show() {

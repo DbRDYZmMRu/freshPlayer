@@ -4,7 +4,7 @@ import { albums } from './albums.js';
 export class SongState {
   constructor() {
     this.audio = document.getElementById('audio-player');
-    this.silentAudio = new Audio('/audio/silent.mp3'); // Silent MP3 for audio focus
+    this.silentAudio = new Audio('/audio/silent.mp3');
     this.state = {
       currentSong: {
         id: null,
@@ -25,14 +25,16 @@ export class SongState {
       recentlyPlayed: [],
       favourites: ['14'],
       freshPicks: ['14'],
+      playlists: {}, // { "Playlist Name": ["songId1", "songId2"] }
+      queue: [], // Array of song IDs
       currentTrackIndex: -1,
       currentTrackList: [],
       shuffle: false,
-      repeat: 'off' // off, all, one
+      repeat: 'off'
     };
     this.listeners = [];
-    this.cache = new Map(); // In-memory cache for JSON data
-    this.hasStarted = false; // For silent audio
+    this.cache = new Map();
+    this.hasStarted = false;
     this.loadData();
     this.initAudioEvents();
   }
@@ -50,9 +52,17 @@ export class SongState {
 
   async loadData() {
     const CACHE_KEY = 'albumData';
-    const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in ms
+    const CACHE_DURATION = 24 * 60 * 60 * 1000;
     const cachedData = localStorage.getItem(CACHE_KEY);
-    
+    const savedState = localStorage.getItem('playerState');
+
+    if (savedState) {
+      const { favourites, playlists, queue } = JSON.parse(savedState);
+      this.state.favourites = favourites || ['14'];
+      this.state.playlists = playlists || {};
+      this.state.queue = queue || [];
+    }
+
     if (cachedData) {
       const { data, timestamp } = JSON.parse(cachedData);
       if (Date.now() - timestamp < CACHE_DURATION) {
@@ -148,22 +158,35 @@ export class SongState {
         data: { albums: this.state.albums, songs: this.state.songs },
         timestamp: Date.now()
       }));
+      this.saveState();
       this.notify();
     } catch (error) {
       console.error('Error loading album data:', error.message);
     }
   }
 
-  setSong(songId) {
+  saveState() {
+    localStorage.setItem('playerState', JSON.stringify({
+      favourites: this.state.favourites,
+      playlists: this.state.playlists,
+      queue: this.state.queue
+    }));
+  }
+
+  setSong(songId, fromQueue = false) {
     const song = this.state.songs.find(s => String(s.id) === String(songId)) || this.state.currentSong;
     const album = this.state.albums.find(a => a.id === song.album_id);
     this.state.currentSong = { ...song, isPlaying: false, currentTime: '00:00', progress: 0 };
     this.state.currentAlbum = album;
     this.state.currentTrackList = album ? this.state.songs.filter(s => s.album_id === album.id) : [song];
-    this.state.currentTrackIndex = this.state.currentTrackList.findIndex(s => s.id === songId);
+    this.state.currentTrackIndex = fromQueue ? -1 : this.state.currentTrackList.findIndex(s => s.id === songId);
     this.audio.src = song.mp3_url;
     this.state.recentlyPlayed = [songId, ...this.state.recentlyPlayed.filter(id => id !== songId)].slice(0, 5);
+    if (fromQueue) {
+      this.state.queue = this.state.queue.filter(id => id !== songId);
+    }
     this.notify();
+    this.saveState();
     this.audio.play().then(() => {
       this.state.currentSong.isPlaying = true;
       this.notify();
@@ -217,7 +240,59 @@ export class SongState {
     this.notify();
   }
 
+  addToQueue(songId) {
+    if (!this.state.songs.find(s => s.id === songId)) return;
+    this.state.queue = [...this.state.queue, songId];
+    this.saveState();
+    this.notify();
+  }
+
+  removeFromQueue(songId) {
+    this.state.queue = this.state.queue.filter(id => id !== songId);
+    this.saveState();
+    this.notify();
+  }
+
+  clearQueue() {
+    this.state.queue = [];
+    this.saveState();
+    this.notify();
+  }
+
+  toggleFavourite(songId) {
+    if (this.state.favourites.includes(songId)) {
+      this.state.favourites = this.state.favourites.filter(id => id !== songId);
+    } else {
+      this.state.favourites = [...this.state.favourites, songId];
+    }
+    this.saveState();
+    this.notify();
+  }
+
+  createPlaylist(name) {
+    if (!name || this.state.playlists[name]) return false;
+    this.state.playlists[name] = [];
+    this.saveState();
+    this.notify();
+    return true;
+  }
+
+  addToPlaylist(playlistName, songId) {
+    if (!this.state.playlists[playlistName] || !this.state.songs.find(s => s.id === songId)) return false;
+    if (!this.state.playlists[playlistName].includes(songId)) {
+      this.state.playlists[playlistName].push(songId);
+      this.saveState();
+      this.notify();
+    }
+    return true;
+  }
+
   playNext() {
+    if (this.state.queue.length > 0) {
+      const nextSongId = this.state.queue[0];
+      this.setSong(nextSongId, true);
+      return;
+    }
     if (!this.state.currentTrackList.length) return;
     let nextIndex;
     if (this.state.shuffle) {
@@ -239,6 +314,11 @@ export class SongState {
   }
 
   playPrevious() {
+    if (this.state.queue.length > 0) {
+      const nextSongId = this.state.queue[0];
+      this.setSong(nextSongId, true);
+      return;
+    }
     if (!this.state.currentTrackList.length) return;
     let prevIndex;
     if (this.state.shuffle) {

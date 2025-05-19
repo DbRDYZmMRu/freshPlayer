@@ -1,4 +1,4 @@
-// js/homeView.js
+// homeView.js
 import { TracklistView } from './tracklistView.js';
 
 export class HomeView {
@@ -9,25 +9,18 @@ export class HomeView {
     this.recentlyPlayed = document.getElementById('recently-played');
     this.favourites = document.getElementById('favourites');
     this.freshPicks = document.getElementById('fresh-picks');
+    this.playlistsContainer = document.getElementById('playlists');
     this.tracklistViews = {};
   }
 
   init() {
-    if (!this.homeView || !this.carouselInner || !this.recentlyPlayed || !this.favourites || !this.freshPicks) {
-      console.error('One or more DOM elements not found in HomeView');
-      return;
-    }
     this.render();
     this.songState.subscribe(state => this.render(state));
     this.bindEvents();
   }
 
   render(state = this.songState.getState()) {
-    if (!this.carouselInner) {
-      console.error('carousel-inner element not found');
-      return;
-    }
-    this.carouselInner.innerHTML = state.albums.length > 0 ? state.albums.map((album, index) => `
+    this.carouselInner.innerHTML = state.albums.map((album, index) => `
       <div class="carousel-item ${index === 0 ? 'active' : ''}" data-album-id="${album.id}">
         <img src="${album.cover}" class="d-block" alt="${album.title}">
         <div class="carousel-caption d-block">
@@ -35,18 +28,26 @@ export class HomeView {
           <p>${album.artist}</p>
         </div>
       </div>
-    `).join('') : '<div class="carousel-item active"><p>No albums available</p></div>';
+    `).join('');
 
     this.renderPlaylist(this.recentlyPlayed, state.recentlyPlayed, state.songs);
     this.renderPlaylist(this.favourites, state.favourites, state.songs);
     this.renderPlaylist(this.freshPicks, state.freshPicks, state.songs);
+
+    // Render user playlists
+    this.playlistsContainer.innerHTML = '';
+    Object.keys(state.playlists).forEach(name => {
+      const playlistDiv = document.createElement('div');
+      playlistDiv.id = `playlist-${name.replace(/\s+/g, '-')}`;
+      playlistDiv.className = 'playlist-section';
+      this.playlistsContainer.appendChild(playlistDiv);
+      const tracklistView = new TracklistView(this.songState, playlistDiv.id, name, name, 'playlist');
+      tracklistView.init('home-view');
+      this.tracklistViews[name] = tracklistView;
+    });
   }
 
   renderPlaylist(container, songIds, songs) {
-    if (!container) {
-      console.error('Playlist container not found');
-      return;
-    }
     container.innerHTML = songIds
       .map(id => songs.find(song => song.id === id))
       .filter(song => song)
@@ -60,34 +61,30 @@ export class HomeView {
   }
 
   bindEvents() {
-    if (this.carouselInner) {
-      this.carouselInner.addEventListener('click', e => {
-        const item = e.target.closest('.carousel-item');
-        if (item) {
-          const albumId = item.dataset.albumId;
-          this.songState.setAlbum(albumId);
-          this.homeView.classList.add('hidden');
-          document.getElementById('tracklist-view').classList.remove('hidden');
-          document.getElementById('playback-overlay').style.display = 'flex';
-        }
-      });
-    }
+    this.carouselInner.addEventListener('click', e => {
+      const item = e.target.closest('.carousel-item');
+      if (item) {
+        const albumId = item.dataset.albumId;
+        this.songState.setAlbum(albumId);
+        this.homeView.classList.add('hidden');
+        document.getElementById('tracklist-view').classList.remove('hidden');
+        document.getElementById('playback-overlay').style.display = 'flex';
+      }
+    });
 
     [this.recentlyPlayed, this.favourites, this.freshPicks].forEach(section => {
-      if (section) {
-        section.addEventListener('click', e => {
-          const item = e.target.closest('.playlist-item');
-          if (item) {
-            const songId = item.dataset.songId;
-            this.songState.setSong(songId);
-            this.homeView.classList.add('hidden');
-            document.getElementById('detailed-player').classList.add('active');
-            document.getElementById('playback-overlay').style.display = 'none';
-            const img = document.getElementById('detailed-album-art');
-            img.onload = () => this.applyGradient(img);
-          }
-        });
-      }
+      section.addEventListener('click', e => {
+        const item = e.target.closest('.playlist-item');
+        if (item) {
+          const songId = item.dataset.songId;
+          this.songState.setSong(songId);
+          this.homeView.classList.add('hidden');
+          document.getElementById('detailed-player').classList.add('active');
+          document.getElementById('playback-overlay').style.display = 'none';
+          const img = document.getElementById('detailed-album-art');
+          img.onload = () => this.applyGradient(img);
+        }
+      });
     });
   }
 

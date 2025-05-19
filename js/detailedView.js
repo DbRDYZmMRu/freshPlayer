@@ -15,10 +15,12 @@ export class DetailedView {
     this.lyricsBtn = document.getElementById('lyrics-btn');
     this.shuffleBtn = document.getElementById('shuffle-btn');
     this.repeatBtn = document.getElementById('repeat-btn');
-    this.prevBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏮️"]');
-    this.nextBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏭️"]');
-    this.rewindBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏪"]');
-    this.forwardBtn = this.detailedPlayer.querySelector('.control-btn[innerText="⏩"]');
+    this.prevBtn = document.getElementById('prev-btn');
+    this.nextBtn = document.getElementById('next-btn');
+    this.rewindBtn = document.getElementById('rewind-btn');
+    this.forwardBtn = document.getElementById('forward-btn');
+    this.favouriteBtn = document.getElementById('favourite-btn');
+    this.queueBtn = document.getElementById('queue-btn');
   }
   
   init(applyGradient) {
@@ -60,10 +62,11 @@ export class DetailedView {
     this.shuffleBtn.classList.toggle('active', state.shuffle);
     this.repeatBtn.textContent = state.repeat === 'one' ? '🔂' : '🔁';
     this.repeatBtn.classList.toggle('active', state.repeat !== 'off');
+    this.favouriteBtn.textContent = state.favourites.includes(song.id) ? '❤️' : '🤍';
   }
   
   bindEvents() {
-    const buttons = [this.detailedPlayBtn, this.prevBtn, this.nextBtn, this.rewindBtn, this.forwardBtn, this.backBtn, this.lyricsBtn, this.shuffleBtn, this.repeatBtn];
+    const buttons = [this.detailedPlayBtn, this.prevBtn, this.nextBtn, this.rewindBtn, this.forwardBtn, this.backBtn, this.lyricsBtn, this.shuffleBtn, this.repeatBtn, this.favouriteBtn, this.queueBtn];
     buttons.forEach(btn => {
       if (btn && btn._handler) {
         btn.removeEventListener('click', btn._handler);
@@ -165,6 +168,26 @@ export class DetailedView {
         this.songState.toggleRepeat();
       };
       this.repeatBtn.addEventListener('click', this.repeatBtn._handler);
+    }
+    
+    
+    if (this.favouriteBtn) {
+      this.favouriteBtn._handler = () => {
+        console.log('Favourite button clicked');
+        this.songState.toggleFavourite(this.songState.getState().currentSong.id);
+      };
+      this.favouriteBtn.addEventListener('click', this.favouriteBtn._handler);
+    }
+    
+    if (this.queueBtn) {
+      this.queueBtn._handler = (e) => {
+        console.log('Queue button clicked');
+        e.stopPropagation();
+        e.preventDefault();
+        this.detailedPlayer.classList.remove('active');
+        document.getElementById('queue-player').classList.add('active');
+      };
+      this.queueBtn.addEventListener('click', this.queueBtn._handler);
     }
   }
   

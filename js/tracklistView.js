@@ -1,17 +1,18 @@
+// tracklistView.js
 export class TracklistView {
-  constructor(songState) {
+  constructor(songState, containerId, title, tracksKey, type = 'album') {
     this.songState = songState;
-    this.tracklistView = document.getElementById('tracklist-view');
-    this.navbar = document.getElementById('sticky-navbar');
-    this.tracklist = document.getElementById('tracklist');
-    this.albumHeader = document.getElementById('album-header');
-    this.albumArtContainer = this.albumHeader.querySelector('.album-art-container');
-    this.mainAlbumArt = document.getElementById('main-album-art');
-    this.thumbnailArt = document.getElementById('thumbnail-art');
-    this.albumTitle = document.getElementById('album-title');
-    this.albumRelease = document.getElementById('album-release');
-    this.navbarAlbumName = document.getElementById('navbar-album-name');
-    this.backBtn = document.getElementById('tracklist-back-btn');
+    this.container = document.getElementById(containerId);
+    this.navbar = document.getElementById(`${containerId}-navbar`) || document.getElementById('sticky-navbar');
+    this.tracklist = this.container.querySelector('.tracklist') || document.getElementById('tracklist');
+    this.header = this.container.querySelector('.header') || document.getElementById('album-header');
+    this.albumArtContainer = this.header?.querySelector('.album-art-container');
+    this.mainAlbumArt = this.header?.querySelector('.album-art') || document.getElementById('main-album-art');
+    this.thumbnailArt = this.navbar?.querySelector('.thumbnail-art') || document.getElementById('thumbnail-art');
+    this.titleElement = this.header?.querySelector('.title') || document.getElementById('album-title');
+    this.subtitleElement = this.header?.querySelector('.subtitle') || document.getElementById('album-release');
+    this.navbarTitle = this.navbar?.querySelector('.album-name') || document.getElementById('navbar-album-name');
+    this.backBtn = this.container.querySelector('.back-btn') || document.getElementById('tracklist-back-btn');
     this.playbackOverlay = document.getElementById('playback-overlay');
     this.playbackCover = this.playbackOverlay.querySelector('.playback-cover');
     this.playbackTitle = this.playbackOverlay.querySelector('.playback-title');
@@ -20,95 +21,125 @@ export class TracklistView {
     this.offcanvasElement = document.getElementById('trackMenu');
     this.offcanvas = new bootstrap.Offcanvas(this.offcanvasElement);
     this.offcanvasTitle = this.offcanvasElement.querySelector('.offcanvas-title');
+    this.title = title;
+    this.tracksKey = tracksKey; // 'tracks' (album), 'queue', 'favourites', or playlist name
+    this.type = type; // 'album', 'queue', 'playlist'
     this.isTransitioning = false;
   }
   
-  init() {
+  init(backTarget = 'home-view') {
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
-    this.bindEvents();
+    this.bindEvents(backTarget);
     this.updateNavbar();
   }
   
   updateUI(state) {
-    const album = state.currentAlbum;
-    if (album) {
-      this.mainAlbumArt.src = album.cover;
-      this.thumbnailArt.src = album.cover;
-      this.albumTitle.textContent = album.title;
-      this.albumRelease.textContent = album.release_date.split('-')[0];
-      this.navbarAlbumName.textContent = album.title;
-      this.tracklist.innerHTML = album.tracks
-        .map((trackId, index) => {
-          const song = state.songs.find(s => s.id === trackId);
-          if (!song) return '';
-          return `
-            <div class="tracklist-item ${state.currentSong.id === song.id ? 'active' : ''}" data-track="${index + 1}" data-song-id="${song.id}" data-title="${song.title}" data-duration="${song.duration}">
-              <div class="track-info">
-                <img src="${song.thumbnail}" class="track-thumbnail" alt="${song.title}">
-                <span class="track-number opacity-75">${index + 1}</span>
-                <div class="track-details">
-                  <div class="track-title">${song.title}</div>
-                  <div class="track-duration">${song.duration}</div>
-                </div>
-              </div>
-              <span class="menu-icon" data-bs-toggle="offcanvas" data-bs-target="#trackMenu">⋮</span>
-            </div>
-          `;
-        }).join('');
+    let tracks = [];
+    let displayTitle = this.title;
+    let subtitle = '';
+    
+    if (this.type === 'album') {
+      const album = state.currentAlbum;
+      if (album) {
+        tracks = album.tracks.map(trackId => state.songs.find(s => s.id === trackId)).filter(s => s);
+        displayTitle = album.title;
+        subtitle = album.release_date.split('-')[0];
+        if (this.mainAlbumArt) this.mainAlbumArt.src = album.cover;
+        if (this.thumbnailArt) this.thumbnailArt.src = album.cover;
+      }
+    } else if (this.type === 'queue') {
+      tracks = state.queue.map(songId => state.songs.find(s => s.id === songId)).filter(s => s);
+      subtitle = `${tracks.length} songs`;
+    } else if (this.type === 'playlist') {
+      tracks = (state[this.tracksKey] || state.playlists[this.tracksKey] || []).map(songId => state.songs.find(s => s.id === songId)).filter(s => s);
+      subtitle = `${tracks.length} songs`;
     }
+    
+    if (this.titleElement) this.titleElement.textContent = displayTitle;
+    if (this.subtitleElement) this.subtitleElement.textContent = subtitle;
+    if (this.navbarTitle) this.navbarTitle.textContent = displayTitle;
+    
+    this.tracklist.innerHTML = tracks
+      .map((song, index) => `
+        <div class="tracklist-item ${state.currentSong.id === song.id ? 'active' : ''}" data-track="${index + 1}" data-song-id="${song.id}" data-title="${song.title}" data-duration="${song.duration}">
+          <div class="track-info">
+            <img src="${song.thumbnail}" class="track-thumbnail" alt="${song.title}">
+            <span class="track-number opacity-75">${index + 1}</span>
+            <div class="track-details">
+              <div class="track-title">${song.title}</div>
+              <div class="track-duration">${song.duration}</div>
+            </div>
+          </div>
+          <span class="menu-icon" data-bs-toggle="offcanvas" data-bs-target="#trackMenu">⋮</span>
+        </div>
+      `).join('');
+    
     this.playbackTitle.textContent = state.currentSong.title;
     this.playbackAlbum.textContent = state.currentSong.album;
     this.playbackCover.src = state.currentSong.thumbnail;
     this.playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
   }
   
-  // tracklistView.js (only showing modified bindEvents)
-  bindEvents() {
-    this.playbackControl.addEventListener('click', e => {
-      e.stopPropagation();
-      this.songState.togglePlay();
-    });
+  bindEvents(backTarget) {
+    if (this.playbackControl) {
+      this.playbackControl._handler = e => {
+        e.stopPropagation();
+        this.songState.togglePlay();
+      };
+      this.playbackControl.addEventListener('click', this.playbackControl._handler);
+    }
     
-    this.playbackOverlay.addEventListener('click', e => {
-      if (e.target.classList.contains('playback-control')) return;
-      if (this.songState.getState().currentSong.title === 'Select a track') return;
-      this.tracklistView.classList.add('hidden');
-      document.getElementById('detailed-player').classList.add('active');
-      this.playbackOverlay.style.display = 'none';
-      const img = document.getElementById('detailed-album-art');
-      img.onload = () => this.applyGradient(img);
-    });
-    
-    this.tracklist.addEventListener('click', e => {
-      const item = e.target.closest('.tracklist-item');
-      if (item && !e.target.classList.contains('menu-icon')) {
-        document.querySelectorAll('.tracklist-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        const songId = item.dataset.songId;
-        this.songState.setSong(songId);
-        this.tracklistView.classList.add('hidden');
+    if (this.playbackOverlay) {
+      this.playbackOverlay._handler = e => {
+        if (e.target.classList.contains('playback-control')) return;
+        if (this.songState.getState().currentSong.title === 'Select a track') return;
+        this.container.classList.add('hidden');
         document.getElementById('detailed-player').classList.add('active');
-        document.getElementById('playback-overlay').style.display = 'none';
+        this.playbackOverlay.style.display = 'none';
         const img = document.getElementById('detailed-album-art');
         img.onload = () => this.applyGradient(img);
-      }
-    });
+      };
+      this.playbackOverlay.addEventListener('click', this.playbackOverlay._handler);
+    }
     
-    this.backBtn.addEventListener('click', () => {
-      this.tracklistView.classList.add('hidden');
-      document.getElementById('home-view').classList.remove('hidden');
-      document.getElementById('playback-overlay').style.display = 'flex';
-      document.body.style.background = 'linear-gradient(to bottom, #1e1e2f, #2a2a4a)';
-    });
+    if (this.tracklist) {
+      this.tracklist._handler = e => {
+        const item = e.target.closest('.tracklist-item');
+        if (item && !e.target.classList.contains('menu-icon')) {
+          document.querySelectorAll('.tracklist-item').forEach(i => i.classList.remove('active'));
+          item.classList.add('active');
+          const songId = item.dataset.songId;
+          this.songState.setSong(songId);
+          this.container.classList.add('hidden');
+          document.getElementById('detailed-player').classList.add('active');
+          document.getElementById('playback-overlay').style.display = 'none';
+          const img = document.getElementById('detailed-album-art');
+          img.onload = () => this.applyGradient(img);
+        }
+      };
+      this.tracklist.addEventListener('click', this.tracklist._handler);
+    }
+    
+    if (this.backBtn) {
+      this.backBtn._handler = () => {
+        this.container.classList.add('hidden');
+        document.getElementById(backTarget).classList.remove('hidden');
+        document.getElementById('playback-overlay').style.display = 'flex';
+        document.body.style.background = 'linear-gradient(to bottom, #1e1e2f, #2a2a4a)';
+      };
+      this.backBtn.addEventListener('click', this.backBtn._handler);
+    }
     
     document.querySelectorAll('.menu-icon').forEach(icon => {
-      icon.addEventListener('click', e => {
+      icon._handler = e => {
         e.stopPropagation();
         const trackItem = icon.closest('.tracklist-item');
         this.offcanvasTitle.textContent = trackItem.dataset.title;
+        this.offcanvas.dataset.songId = trackItem.dataset.songId;
         this.offcanvas.show();
-      });
+      };
+      icon.addEventListener('click', icon._handler);
     });
     
     window.addEventListener('scroll', this.debounce(this.updateNavbar.bind(this), 150));
@@ -203,29 +234,31 @@ export class TracklistView {
   }
   
   updateNavbar() {
-    if (this.isTransitioning || !this.tracklistView.classList.contains('hidden')) {
+    if (this.isTransitioning || !this.container.classList.contains('hidden')) {
       const tracklistTop = this.tracklist.getBoundingClientRect().top;
       const snapThreshold = 50;
       
       if (tracklistTop <= snapThreshold && !this.navbar.classList.contains('show')) {
         this.isTransitioning = true;
-        this.albumArtContainer.classList.add('transitioning');
+        if (this.albumArtContainer) this.albumArtContainer.classList.add('transitioning');
         this.navbar.classList.add('show');
         this.tracklist.classList.add('navbar-active');
         requestAnimationFrame(() => {
           setTimeout(() => {
-            this.albumArtContainer.classList.remove('transitioning');
-            this.albumArtContainer.style.display = 'none';
+            if (this.albumArtContainer) {
+              this.albumArtContainer.classList.remove('transitioning');
+              this.albumArtContainer.style.display = 'none';
+            }
             this.isTransitioning = false;
           }, 500);
         });
       } else if (tracklistTop > snapThreshold && this.navbar.classList.contains('show')) {
         this.isTransitioning = true;
-        this.albumArtContainer.style.display = 'block';
-        this.albumArtContainer.classList.add('transitioning-back');
+        if (this.albumArtContainer) this.albumArtContainer.style.display = 'block';
+        if (this.albumArtContainer) this.albumArtContainer.classList.add('transitioning-back');
         requestAnimationFrame(() => {
           setTimeout(() => {
-            this.albumArtContainer.classList.remove('transitioning-back');
+            if (this.albumArtContainer) this.albumArtContainer.classList.remove('transitioning-back');
             this.navbar.classList.remove('show');
             this.tracklist.classList.remove('navbar-active');
             this.isTransitioning = false;
@@ -236,10 +269,10 @@ export class TracklistView {
   }
   
   show() {
-    this.tracklistView.classList.remove('hidden');
+    this.container.classList.remove('hidden');
   }
   
   hide() {
-    this.tracklistView.classList.add('hidden');
+    this.container.classList.add('hidden');
   }
 }

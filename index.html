@@ -65,7 +65,6 @@
     <span class="playback-control" id="playback-control">▶</span>
   </div>
   
-  <!-- index.html (replace detailed-player and lyrics-player sections) -->
   <!-- Detailed Player View -->
   <div class="detailed-player" id="detailed-player">
     <button class="back-btn" id="back-btn">←</button>
@@ -79,11 +78,11 @@
       </div>
       <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
         <button id="shuffle-btn" class="control-btn btn p-0">🔀</button>
-        <button class="control-btn btn p-0">⏪</button>
-        <button class="control-btn btn p-0">⏮️</button>
+        <button id="rewind-btn" class="control-btn btn p-0">⏪</button>
+        <button id="prev-btn" class="control-btn btn p-0">⏮️</button>
         <button class="play-btn btn d-flex justify-content-center align-items-center" id="detailed-play-btn">▶️</button>
-        <button class="control-btn btn p-0">⏭️</button>
-        <button class="control-btn btn p-0">⏩</button>
+        <button id="next-btn" class="control-btn btn p-0">⏭️</button>
+        <button id="forward-btn" class="control-btn btn p-0">⏩</button>
         <button id="repeat-btn" class="control-btn btn p-0">🔁</button>
       </div>
       <div class="mb-3">
@@ -101,10 +100,10 @@
       </div>
       <div class="d-flex justify-content-around">
         <button class="btn p-0 fs-5 bottom-controls" id="lyrics-btn">💬</button>
-        <button class="btn p-0 fs-5 bottom-controls">❤️</button>
+        <button class="btn p-0 fs-5 bottom-controls" id="favourite-btn">🤍</button>
         <button class="btn p-0 fs-5 bottom-controls">🌙</button>
         <button class="btn p-0 fs-5 bottom-controls">📜</button>
-        <button class="btn p-0 fs-5 bottom-controls">⋯</button>
+        <button class="btn p-0 fs-5 bottom-controls" id="queue-btn">📋</button>
       </div>
     </div>
   </div>
@@ -122,8 +121,15 @@
           <div class="progress-bar"></div>
           <div class="progress-dot"></div>
         </div>
+        
         <span id="lyrics-total-time" class="time">00:00</span>
       </div>
+      
+      <div class="d-flex justify-content-around mt-3">
+        <button class="btn p-0 fs-5 bottom-controls" id="lyrics-queue-btn">📋</button>
+        <button class="btn p-0 fs-5 bottom-controls" id="lyrics-favourite-btn">🤍</button>
+      </div>
+      
       <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
         <button id="lyrics-shuffle-btn" class="control-btn btn p-0">🔀</button>
         <button id="lyrics-rewind-btn" class="control-btn btn p-0">⏪</button>
@@ -137,6 +143,16 @@
     <div id="lyrics-background"></div>
   </div>
   
+  <div id="queue-player" class="queue-player hidden">
+    <div class="header">
+      <button id="queue-back-btn" class="back-btn">⬅</button>
+      <div class="title fs-4 fw-bold">Queue</div>
+      <div class="subtitle fs-5 opacity-75"></div>
+      <button id="queue-clear-btn" class="btn btn-sm btn-outline-light mt-2">Clear Queue</button>
+    </div>
+    <div class="tracklist"></div>
+  </div>
+  
   <!-- Offcanvas -->
   <div class="offcanvas offcanvas-bottom" tabindex="-1" id="trackMenu" aria-labelledby="trackMenuLabel">
     <div class="offcanvas-header">
@@ -144,7 +160,9 @@
       <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-      <div class="offcanvas-menu-item">Add to Playlist</div>
+      <div class="offcanvas-menu-item" id="add-to-queue">Add to Queue</div>
+      <div class="offcanvas-menu-item" id="add-to-playlist">Add to Playlist</div>
+      <div class="offcanvas-menu-item" id="create-playlist">Create Playlist</div>
       <div class="offcanvas-menu-item">Share</div>
       <div class="offcanvas-menu-item">View Details</div>
     </div>

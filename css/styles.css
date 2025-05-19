@@ -815,3 +815,31 @@ body {
   opacity: 0.8;
   transform: scale(1.1);
 }
+
+.queue-player {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 0 15px;
+  padding-bottom: 80px;
+  display: none;
+}
+
+.queue-player.active {
+  display: block;
+}
+
+.header {
+  text-align: center;
+  position: relative;
+  scroll-snap-align: start;
+}
+
+.subtitle {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.bottom-controls.active {
+  color: #6b48ff;
+  opacity: 1;
+}
