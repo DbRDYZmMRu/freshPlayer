@@ -38,8 +38,7 @@ export class DetailedView {
   render(state = this.songState.getState()) {
     try {
       const { currentSong, albums, favourites, shuffle, repeat } = state;
-      const album = albums.find(a => a.id === currentSong.album_id);
-      this.albumArt.src = album?.cover || '/images/placeholder.jpg'; // Album cover
+      this.albumArt.src = currentSong.thumbnail || currentSong.cover || '/images/placeholder.jpg'; // Revert to song thumbnail
       this.songTitle.textContent = currentSong.title || 'Select a track';
       this.artist.textContent = currentSong.artist || 'Frith Hilton';
       this.currentTime.textContent = currentSong.currentTime || '0:00';

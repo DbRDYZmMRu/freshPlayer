@@ -46,8 +46,8 @@ export class TracklistView {
         tracks = album.tracks.map(trackId => state.songs.find(s => s.id === trackId)).filter(s => s);
         displayTitle = album.title;
         subtitle = album.release_date.split('-')[0];
-        if (this.mainAlbumArt) this.mainAlbumArt.src = album.cover;
-        if (this.thumbnailArt) this.thumbnailArt.src = album.cover;
+        if (this.mainAlbumArt) this.mainAlbumArt.src = album.cover || '/images/placeholder.jpg';
+        if (this.thumbnailArt) this.thumbnailArt.src = album.cover || '/images/placeholder.jpg';
       }
     } else if (this.type === 'queue') {
       tracks = state.queue.map(songId => state.songs.find(s => s.id === songId)).filter(s => s);
@@ -79,8 +79,7 @@ export class TracklistView {
     
     this.playbackTitle.textContent = state.currentSong.title;
     this.playbackAlbum.textContent = state.currentSong.album;
-    const currentAlbum = state.albums.find(a => a.id === state.currentSong.album_id);
-    this.playbackCover.src = currentAlbum?.cover || '/images/placeholder.jpg';
+    this.playbackCover.src = state.currentSong.cover || '/images/placeholder.jpg';
     this.playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
   }
   

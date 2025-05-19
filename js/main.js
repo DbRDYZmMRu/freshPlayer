@@ -48,8 +48,7 @@ class App {
       const playbackControl = document.getElementById('playback-control');
       
       this.songState.subscribe(state => {
-        const album = state.albums.find(a => a.id === state.currentSong.album_id);
-        playbackCover.src = album?.cover || '/images/placeholder.jpg';
+        playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || '/images/placeholder.jpg';
         playbackTitle.textContent = state.currentSong.title || 'Select a track';
         playbackAlbum.textContent = state.currentSong.album || 'Unknown';
         playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';

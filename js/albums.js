@@ -75,7 +75,7 @@ export const albums = [
   },
   {
     name: 'Theo',
-    cover: 'https://unluckiest-refund.000webhostapp.com/Theo/Track%201/Cover.jpg', 
+    cover: 'https://frithhilton.com.ng/musicpool/covers/7/album_cover/7.jpg', 
     releaseDate: 'December 15, 2022',
     tracks: [
       'Easy son', 'Ex, your relay', 'Easy, hard', 'Apogee', 'Caret', 'Moment',
@@ -121,7 +121,7 @@ export const albums = [
   },
   {
     name: 'troubadour',
-    cover: 'https://frithhilton.com.ng/musicpool/covers/11/album_cover/11.jpg', 
+    cover: 'https://frithhilton.com.ng/musicpool/covers/11/album_cover/11.png', 
     releaseDate: 'January 21, 2024',
     tracks: [
       'Eviction', 'Waste away', 'West to west', "I'll never", 'Cave',
@@ -133,7 +133,7 @@ export const albums = [
   },
   {
     name: "it's pop",
-    cover: 'https://frithhilton.com.ng/musicpool/covers/12/album_cover/12.jpg', 
+    cover: 'https://frithhilton.com.ng/musicpool/covers/12/album_cover/12.png', 
     releaseDate: 'March 8, 2024',
     tracks: [
       'Low life dirty rat', 'A seal', 'Summit', 'New hemp plant', 'Melly',
@@ -155,7 +155,7 @@ export const albums = [
   },
   {
     name: 'Farther Memes',
-    cover: 'https://frithhilton.com.ng/musicpool/covers/14/album_cover/14.jpg', 
+    cover: 'https://frithhilton.com.ng/musicpool/covers/14/album_cover/14.png', 
     releaseDate: 'February 15, 2025',
     tracks: [
       'Oliver Sacks', 'Oliver Sacks II', 'Palacio de la Zarzuela', 'The preacher',

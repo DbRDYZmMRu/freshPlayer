@@ -48,7 +48,7 @@ export class HomeView {
         this.carouselInner.innerHTML = Array.isArray(state.albums) && state.albums.length > 0 ?
           state.albums.map((album, index) => `
               <div class="carousel-item ${index === 0 ? 'active' : ''}" data-album-id="${album.id}">
-                <img src="${album.cover}" class="d-block w-100" alt="${album.title}">
+                <img src="${album.cover || '/images/placeholder.jpg'}" class="d-block w-100" alt="${album.title}">
                 <div class="carousel-caption d-block">
                   <h5>${album.title}</h5>
                   <p>${album.artist}</p>
@@ -94,7 +94,7 @@ export class HomeView {
         this.albumsSection.innerHTML = Array.isArray(state.albums) && state.albums.length > 0 ?
           state.albums.map(album => `
               <div class="album-item" data-album-id="${album.id}">
-                <img src="${album.cover}" alt="${album.title}" class="album-thumbnail">
+                <img src="${album.cover || '/images/placeholder.jpg'}" alt="${album.title}" class="album-thumbnail">
                 <div class="album-details">
                   <div class="album-title">${album.title}</div>
                   <div class="album-artist">${album.artist}</div>
