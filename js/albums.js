@@ -1,6 +1,7 @@
 export const albums = [
   {
     name: 'H.I.V',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/1/album_cover/1.jpg', 
     releaseDate: 'April 17, 2019',
     tracks: [
       'What is Love', 'Real Friends', 'Spotlight', 'Bleeding Heart', 'Rollie Dreams',
@@ -10,6 +11,7 @@ export const albums = [
   },
   {
     name: 'colourful light',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/2/album_cover/2.jpg', 
     releaseDate: 'January 18, 2023',
     tracks: [
       'Conterminous', 'Forever', 'Not on my mobile', 'No prolix', 'Clones', 'Needle',
@@ -22,6 +24,7 @@ export const albums = [
   },
   {
     name: 'December 13',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/3/album_cover/3.jpg', 
     releaseDate: 'January 10, 2022',
     tracks: [
       'Anarchy', 'December 13', "Can't have you", 'Got a bitch a valve', 'Tom',
@@ -34,6 +37,7 @@ export const albums = [
   },
   {
     name: 'Frith',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/4/album_cover/4.jpg', 
     releaseDate: 'May 5, 2022',
     tracks: [
       'Take no buck', 'Triple to the X', 'Facts', 'Consumed', 'Anon', 'Curveball',
@@ -45,6 +49,7 @@ export const albums = [
   },
   {
     name: 'screen time',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/5/album_cover/5.jpg', 
     releaseDate: 'July 2, 2022',
     tracks: [
       'From the start', 'Reverse', 'Get on with Jack', 'Too deep', 'Andalucía',
@@ -58,6 +63,7 @@ export const albums = [
   },
   {
     name: 'Jacaranda',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/6/album_cover/6.jpg', 
     releaseDate: 'September 24, 2022',
     tracks: [
       'Home', 'QWERTY', 'Blue heeler', 'Gargoyle', 'Silly hen', 'June', 'Thoth',
@@ -69,6 +75,7 @@ export const albums = [
   },
   {
     name: 'Theo',
+    cover: 'https://unluckiest-refund.000webhostapp.com/Theo/Track%201/Cover.jpg', 
     releaseDate: 'December 15, 2022',
     tracks: [
       'Easy son', 'Ex, your relay', 'Easy, hard', 'Apogee', 'Caret', 'Moment',
@@ -81,7 +88,8 @@ export const albums = [
     ]
   },
   {
-    name: 'lantern',
+    name: 'lantern', 
+    cover: 'https://frithhilton.com.ng/musicpool/covers/8/album_cover/8.jpg', 
     releaseDate: 'February 24, 2023',
     tracks: [
       'Do I ever do?', 'Number busy', 'Emma I feel', 'Raunch child', 'Jekyll',
@@ -92,6 +100,7 @@ export const albums = [
   },
   {
     name: 'the Lover tap3',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/9/album_cover/9.jpg', 
     releaseDate: 'June 19, 2023',
     tracks: [
       'Fair this time', 'Envy', 'Hump', 'Show me a girl', 'Disclose', 'On one',
@@ -100,6 +109,7 @@ export const albums = [
   },
   {
     name: 'Nightswan',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/10/album_cover/10.jpg', 
     releaseDate: 'August 4, 2023',
     tracks: [
       'Curandera', 'Marilyn', 'Being friends', 'Darbies', 'Amor fati', 'Pale',
@@ -111,6 +121,7 @@ export const albums = [
   },
   {
     name: 'troubadour',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/11/album_cover/11.jpg', 
     releaseDate: 'January 21, 2024',
     tracks: [
       'Eviction', 'Waste away', 'West to west', "I'll never", 'Cave',
@@ -122,6 +133,7 @@ export const albums = [
   },
   {
     name: "it's pop",
+    cover: 'https://frithhilton.com.ng/musicpool/covers/12/album_cover/12.jpg', 
     releaseDate: 'March 8, 2024',
     tracks: [
       'Low life dirty rat', 'A seal', 'Summit', 'New hemp plant', 'Melly',
@@ -133,6 +145,7 @@ export const albums = [
   },
   {
     name: 'the Sessions',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/13/album_cover/13.jpg', 
     releaseDate: 'June 14, 2024',
     tracks: [
       'Savour', 'Dizzy morning', 'Dirty laundry', 'Canticle', 'SZA', 'Undecided',
@@ -142,6 +155,7 @@ export const albums = [
   },
   {
     name: 'Farther Memes',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/14/album_cover/14.jpg', 
     releaseDate: 'February 15, 2025',
     tracks: [
       'Oliver Sacks', 'Oliver Sacks II', 'Palacio de la Zarzuela', 'The preacher',
@@ -155,6 +169,7 @@ export const albums = [
   },
   {
     name: 'Valence Eve',
+    cover: 'https://frithhilton.com.ng/musicpool/covers/15/album_cover/15.jpg', 
     releaseDate: 'December 31, 2024',
     tracks: [
       'I try', 'Kill time', 'Alarms', 'Smile on me', "Queen's daughter",

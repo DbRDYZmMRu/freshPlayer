@@ -1,44 +1,33 @@
-// songState.js
+// js/songState.js
 import { albums } from './albums.js';
 
 export class SongState {
   constructor() {
-    this.audio = document.getElementById('audio-player');
-    this.silentAudio = new Audio('/audio/silent.mp3');
     this.state = {
-      currentSong: {
-        id: null,
-        title: 'Select a track',
-        album: 'Unknown',
-        artist: 'Frith Hilton',
-        cover: '/images/placeholder.jpg',
-        thumbnail: '/images/placeholder.jpg',
-        duration: '00:00',
-        currentTime: '00:00',
-        isPlaying: false,
-        lyrics: [],
-        mp3_url: null
-      },
-      currentAlbum: null,
-      albums: [],
       songs: [],
+      albums: [],
+      currentSong: { id: null, title: 'Select a track', album: '', thumbnail: '', mp3_url: '', isPlaying: false, currentTime: '0:00', duration: '0:00', progress: 0, lyrics: [] },
+      currentAlbum: null,
+      queue: [],
       recentlyPlayed: [],
-      favourites: ['14'],
-      freshPicks: ['14'],
-      playlists: {}, // { "Playlist Name": ["songId1", "songId2"] }
-      queue: [], // Array of song IDs
-      currentTrackIndex: -1,
-      currentTrackList: [],
+      favourites: [],
+      playlists: {},
+      navigationHistory: ['home-view'],
       shuffle: false,
-      repeat: 'off'
+      repeat: 'off',
+      currentTrackList: [],
+      currentTrackIndex: -1
     };
-    this.listeners = [];
+    this.audio = new Audio();
+    this.subscribers = [];
     this.cache = new Map();
+    this.progressDebounce = null;
     this.hasStarted = false;
+    this.silentAudio = new Audio('data:audio/mpeg;base64,/+MYxAAAAANIAAAAAExBTUUzLjk4LjIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
     this.loadData();
     this.initAudioEvents();
   }
-
+  
   initAudioEvents() {
     this.audio.addEventListener('timeupdate', () => this.updateProgress());
     this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
@@ -49,31 +38,42 @@ export class SongState {
       this.notify();
     });
   }
-
+  
   async loadData() {
     const CACHE_KEY = 'albumData';
     const CACHE_DURATION = 24 * 60 * 60 * 1000;
     const cachedData = localStorage.getItem(CACHE_KEY);
     const savedState = localStorage.getItem('playerState');
-
+    
     if (savedState) {
-      const { favourites, playlists, queue } = JSON.parse(savedState);
-      this.state.favourites = favourites || ['14'];
-      this.state.playlists = playlists || {};
-      this.state.queue = queue || [];
-    }
-
-    if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      if (Date.now() - timestamp < CACHE_DURATION) {
-        console.log('Loading from localStorage cache');
-        this.state.albums = data.albums;
-        this.state.songs = data.songs;
-        this.notify();
-        return;
+      try {
+        const { favourites, playlists, queue, recentlyPlayed, shuffle, repeat } = JSON.parse(savedState);
+        this.state.favourites = Array.isArray(favourites) ? favourites : ['14'];
+        this.state.playlists = typeof playlists === 'object' && playlists !== null ? playlists : {};
+        this.state.queue = Array.isArray(queue) ? queue : [];
+        this.state.recentlyPlayed = Array.isArray(recentlyPlayed) ? recentlyPlayed : [];
+        this.state.shuffle = typeof shuffle === 'boolean' ? shuffle : false;
+        this.state.repeat = ['off', 'all', 'one'].includes(repeat) ? repeat : 'off';
+      } catch (error) {
+        console.error('Error parsing saved state:', error);
       }
     }
-
+    
+    if (cachedData) {
+      try {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          console.log('Loading from localStorage cache');
+          this.state.albums = Array.isArray(data.albums) ? data.albums : [];
+          this.state.songs = Array.isArray(data.songs) ? data.songs : [];
+          this.notify();
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing cached data:', error);
+      }
+    }
+    
     try {
       const allTracks = [];
       const albumsWithTracks = await Promise.all(albums.map(async album => {
@@ -110,30 +110,32 @@ export class SongState {
               }
             }
             if (!data) {
-              throw new Error(`All name formats failed for ${track}: ${lastError.message}`);
+              throw new Error(`All name formats failed for ${track}: ${lastError?.message || 'Unknown error'}`);
             }
             const defaultCover = '/images/placeholder.jpg';
             const coverUrl = data.cover && typeof data.cover === 'string' && data.cover.startsWith('http') ?
-              data.cover : defaultCover;
+              data.cover :
+              defaultCover;
             const thumbnailUrl = coverUrl !== defaultCover && coverUrl.includes('/musicpool/covers/') ?
-              coverUrl.replace('/musicpool/covers/', '/musicpool/thumbnails/') : coverUrl;
+              coverUrl.replace('/musicpool/covers/', '/musicpool/thumbnails/') :
+              coverUrl;
             const trackData = {
-              id: data.id,
-              title: data.song_title,
-              artist: data.writer,
+              id: data.id || `${album.name}-${track.replace(/[^a-zA-Z0-9]/g, '')}`,
+              title: data.song_title || track,
+              artist: data.writer || 'Frith Hilton',
               album: album.name,
               album_id: album.name,
               cover: coverUrl,
               thumbnail: thumbnailUrl,
-              duration: '03:00',
-              lyrics: data.lyrics,
-              mp3_url: data.mp3_url
+              duration: data.duration || '03:00',
+              lyrics: Array.isArray(data.lyrics) ? data.lyrics : [],
+              mp3_url: data.mp3_url || ''
             };
             this.cache.set(cacheKey, trackData);
             allTracks.push(trackData);
             return trackData;
           } catch (error) {
-            console.error(`Error loading ${track} for album ${album.name}: ${error.message}`);
+            console.error(`Error loading ${track} for album ${album.name}:`, error.message);
             return null;
           }
         }));
@@ -146,7 +148,7 @@ export class SongState {
           id: album.name,
           title: album.name,
           artist: 'Frith Hilton',
-          cover: validTracks[0]?.thumbnail || '/images/placeholder.jpg',
+          cover: validTracks[0]?.thumbnail || album.cover || '/images/placeholder.jpg',
           release_date: album.releaseDate,
           tracks: validTracks.map(t => t.id)
         };
@@ -161,22 +163,40 @@ export class SongState {
       this.saveState();
       this.notify();
     } catch (error) {
-      console.error('Error loading album data:', error.message);
+      console.error('Error loading album data:', error);
     }
   }
-
+  
   saveState() {
-    localStorage.setItem('playerState', JSON.stringify({
-      favourites: this.state.favourites,
-      playlists: this.state.playlists,
-      queue: this.state.queue
-    }));
+    try {
+      localStorage.setItem('playerState', JSON.stringify({
+        favourites: this.state.favourites,
+        playlists: this.state.playlists,
+        queue: this.state.queue,
+        recentlyPlayed: this.state.recentlyPlayed,
+        shuffle: this.state.shuffle,
+        repeat: this.state.repeat,
+        navigationHistory: this.state.navigationHistory
+      }));
+    } catch (error) {
+      console.error('Error saving state:', error);
+    }
   }
-
+  
+  notify() {
+    this.subscribers.forEach(callback => {
+      try {
+        callback(this.state);
+      } catch (error) {
+        console.error('Error in subscriber callback:', error);
+      }
+    });
+  }
+  
   setSong(songId, fromQueue = false) {
     const song = this.state.songs.find(s => String(s.id) === String(songId)) || this.state.currentSong;
     const album = this.state.albums.find(a => a.id === song.album_id);
-    this.state.currentSong = { ...song, isPlaying: false, currentTime: '00:00', progress: 0 };
+    this.state.currentSong = { ...song, isPlaying: false, currentTime: '0:00', progress: 0 };
     this.state.currentAlbum = album;
     this.state.currentTrackList = album ? this.state.songs.filter(s => s.album_id === album.id) : [song];
     this.state.currentTrackIndex = fromQueue ? -1 : this.state.currentTrackList.findIndex(s => s.id === songId);
@@ -185,8 +205,8 @@ export class SongState {
     if (fromQueue) {
       this.state.queue = this.state.queue.filter(id => id !== songId);
     }
-    this.notify();
     this.saveState();
+    this.notify();
     this.audio.play().then(() => {
       this.state.currentSong.isPlaying = true;
       this.notify();
@@ -196,16 +216,18 @@ export class SongState {
       this.notify();
     });
   }
-
+  
   setAlbum(albumId) {
-    this.state.currentAlbum = this.state.albums.find(a => a.id === albumId) || null;
-    if (this.state.currentAlbum) {
+    const album = this.state.albums.find(a => a.id === albumId) || null;
+    this.state.currentAlbum = album;
+    if (album) {
       this.state.currentTrackList = this.state.songs.filter(s => s.album_id === albumId);
       this.state.currentTrackIndex = -1;
     }
+    this.saveState();
     this.notify();
   }
-
+  
   togglePlay() {
     if (!this.state.currentSong.mp3_url) return;
     if (!this.hasStarted) {
@@ -226,39 +248,42 @@ export class SongState {
         this.state.currentSong.isPlaying = false;
       });
     }
+    this.saveState();
     this.notify();
   }
-
+  
   toggleShuffle() {
     this.state.shuffle = !this.state.shuffle;
+    this.saveState();
     this.notify();
   }
-
+  
   toggleRepeat() {
     const modes = ['off', 'all', 'one'];
     this.state.repeat = modes[(modes.indexOf(this.state.repeat) + 1) % modes.length];
+    this.saveState();
     this.notify();
   }
-
+  
   addToQueue(songId) {
     if (!this.state.songs.find(s => s.id === songId)) return;
     this.state.queue = [...this.state.queue, songId];
     this.saveState();
     this.notify();
   }
-
+  
   removeFromQueue(songId) {
     this.state.queue = this.state.queue.filter(id => id !== songId);
     this.saveState();
     this.notify();
   }
-
+  
   clearQueue() {
     this.state.queue = [];
     this.saveState();
     this.notify();
   }
-
+  
   toggleFavourite(songId) {
     if (this.state.favourites.includes(songId)) {
       this.state.favourites = this.state.favourites.filter(id => id !== songId);
@@ -268,17 +293,43 @@ export class SongState {
     this.saveState();
     this.notify();
   }
-
+  
   createPlaylist(name) {
-    if (!name || this.state.playlists[name]) return false;
+    if (!name || this.state.playlists[name]) {
+      console.log(`Playlist "${name}" already exists`);
+      return false;
+    }
     this.state.playlists[name] = [];
     this.saveState();
     this.notify();
     return true;
   }
-
+  
+  deletePlaylist(name) {
+    if (!this.state.playlists[name]) return false;
+    delete this.state.playlists[name];
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
+  renamePlaylist(oldName, newName) {
+    if (!this.state.playlists[oldName] || !newName || this.state.playlists[newName]) {
+      console.log(`Cannot rename "${oldName}" to "${newName}": invalid or exists`);
+      return false;
+    }
+    this.state.playlists[newName] = this.state.playlists[oldName];
+    delete this.state.playlists[oldName];
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
   addToPlaylist(playlistName, songId) {
-    if (!this.state.playlists[playlistName] || !this.state.songs.find(s => s.id === songId)) return false;
+    if (!this.state.playlists[playlistName] || !this.state.songs.find(s => s.id === songId)) {
+      console.log(`Invalid playlist "${playlistName}" or song "${songId}"`);
+      return false;
+    }
     if (!this.state.playlists[playlistName].includes(songId)) {
       this.state.playlists[playlistName].push(songId);
       this.saveState();
@@ -286,7 +337,55 @@ export class SongState {
     }
     return true;
   }
-
+  
+  removeSongFromPlaylist(playlistName, songId) {
+    if (!this.state.playlists[playlistName]) return false;
+    this.state.playlists[playlistName] = this.state.playlists[playlistName].filter(id => id !== songId);
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
+  reorderPlaylist(playlistName, newOrder) {
+    if (!this.state.playlists[playlistName]) return false;
+    const validOrder = newOrder.filter(id => this.state.playlists[playlistName].includes(id));
+    if (validOrder.length !== this.state.playlists[playlistName].length) return false;
+    this.state.playlists[playlistName] = validOrder;
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
+  pushView(viewId) {
+    this.state.navigationHistory.push(viewId);
+    this.saveState();
+    this.notify();
+  }
+  
+  popView() {
+    if (this.state.navigationHistory.length > 1) {
+      this.state.navigationHistory.pop();
+      const previousView = this.state.navigationHistory[this.state.navigationHistory.length - 1];
+      this.saveState();
+      this.notify();
+      return previousView;
+    }
+    return 'home-view';
+  }
+  
+  // js/songState.js (only showing changed method)
+  getPreviousView() {
+    return this.state.navigationHistory.length > 1 ?
+      this.state.navigationHistory[this.state.navigationHistory.length - 2] :
+      'home-view';
+  }
+  
+  clearNavigationHistory() {
+    this.state.navigationHistory = ['home-view'];
+    this.saveState();
+    this.notify();
+  }
+  
   playNext() {
     if (this.state.queue.length > 0) {
       const nextSongId = this.state.queue[0];
@@ -312,7 +411,7 @@ export class SongState {
       this.notify();
     }
   }
-
+  
   playPrevious() {
     if (this.state.queue.length > 0) {
       const nextSongId = this.state.queue[0];
@@ -336,7 +435,7 @@ export class SongState {
       this.notify();
     }
   }
-
+  
   handleSongEnd() {
     if (this.state.repeat === 'one') {
       this.audio.currentTime = 0;
@@ -348,20 +447,20 @@ export class SongState {
       this.playNext();
     }
   }
-
+  
   seek(seconds) {
     if (!this.state.currentSong.mp3_url) return;
     this.audio.currentTime = Math.max(0, Math.min(this.audio.currentTime + seconds, this.audio.duration || Infinity));
     this.notify();
   }
-
+  
   seekTo(percentage) {
     if (this.audio.duration) {
       this.audio.currentTime = percentage * this.audio.duration;
       this.notify();
     }
   }
-
+  
   updateProgress() {
     if (this.audio.duration) {
       const currentTime = this.audio.currentTime;
@@ -376,28 +475,24 @@ export class SongState {
       }
     }
   }
-
+  
   updateDuration() {
     if (this.audio.duration) {
       this.state.currentSong.duration = this.formatTime(this.audio.duration);
       this.notify();
     }
   }
-
+  
   formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
-
-  subscribe(listener) {
-    this.listeners.push(listener);
+  
+  subscribe(callback) {
+    this.subscribers.push(callback);
   }
-
-  notify() {
-    this.listeners.forEach(listener => listener(this.state));
-  }
-
+  
   getState() {
     return { ...this.state };
   }

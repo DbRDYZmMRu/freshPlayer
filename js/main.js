@@ -6,145 +6,174 @@ import { DetailedView } from './detailedView.js';
 import { LyricsView } from './lyricsView.js';
 import { QueueView } from './queueView.js';
 
-const songState = new SongState();
-const homeView = new HomeView(songState);
-const tracklistView = new TracklistView(songState, 'tracklist-view', 'Album', 'tracks', 'album');
-const detailedView = new DetailedView(songState);
-const lyricsView = new LyricsView(songState);
-const queueView = new QueueView(songState);
-
-function init() {
-  homeView.init();
-  tracklistView.init();
-  detailedView.init(image => homeView.applyGradient(image));
-  lyricsView.init(image => homeView.applyGradient(image));
-  queueView.init();
-
-  const playbackOverlay = document.getElementById('playback-overlay');
-  const lyricsBackBtn = document.getElementById('lyrics-back-btn');
-  const offcanvas = document.getElementById('trackMenu');
-  const addToQueue = document.getElementById('add-to-queue');
-  const addToPlaylist = document.getElementById('add-to-playlist'); // Fixed ID
-  const createPlaylist = document.getElementById('create-playlist');
-
-  playbackOverlay.addEventListener('click', e => {
-    if (e.target.closest('.playback-control')) return;
-    if (songState.getState().currentSong.title === 'Select a track') return;
-    console.log('Playback overlay clicked, showing detailed view');
-    homeView.hide();
-    tracklistView.hide();
-    detailedView.show();
-    playbackOverlay.style.display = 'none';
-    const img = document.getElementById('detailed-album-art');
-    img.onload = () => homeView.applyGradient(img);
-  });
-
-  lyricsBackBtn.addEventListener('click', () => {
-    console.log('Lyrics back button clicked');
-    lyricsView.hide();
-    detailedView.show();
-    const img = document.getElementById('detailed-album-art');
-    img.onload = () => homeView.applyGradient(img);
-  });
-
-  addToQueue.addEventListener('click', () => {
-    const songId = offcanvas.dataset.songId;
-    songState.addToQueue(songId);
-    offcanvas._element.dispatchEvent(new Event('hidden.bs.offcanvas'));
-  });
-
-  addToPlaylist.addEventListener('click', () => {
-    const songId = offcanvas.dataset.songId;
-    const playlistName = prompt('Enter playlist name:');
-    if (playlistName) {
-      if (songState.createPlaylist(playlistName)) {
-        songState.addToPlaylist(playlistName, songId);
-      } else {
-        alert('Playlist already exists!');
-      }
-    }
-    offcanvas._element.dispatchEvent(new Event('hidden.bs.offcanvas'));
-  });
-
-  createPlaylist.addEventListener('click', () => {
-    const playlistName = prompt('Enter new playlist name:');
-    if (playlistName) {
-      if (!songState.createPlaylist(playlistName)) {
-        alert('Playlist already exists!');
-      }
-    }
-    offcanvas._element.dispatchEvent(new Event('hidden.bs.offcanvas'));
-  });
-}
-
-document.addEventListener('DOMContentLoaded', init);
-
-function rgbToHsl(r, g, b) {
-  r /= 255, g /= 255, b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h, s, l = (max + min) / 2;
-  if (max === min) {
-    h = s = 0;
-  } else {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h /= 6;
-  }
-  return [h * 360, s * 100, l * 100];
-}
-
-function hslToRgb(h, s, l) {
-  h /= 360, s /= 100, l /= 100;
-  let r, g, b;
-  if (s === 0) {
-    r = g = b = l;
-  } else {
-    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1/6) return p + (q - p) * 6 * t;
-      if (t < 1/2) return q;
-      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-      return p;
+class App {
+  constructor() {
+    this.songState = new SongState();
+    this.views = {
+      'home-view': new HomeView(this.songState),
+      'tracklist-view': new TracklistView(this.songState, 'tracklist-view', 'Album', 'tracks', 'album', this.views?.['home-view']?.applyGradient?.bind(this.views['home-view'])),
+      'detailed-player': new DetailedView(this.songState),
+      'lyrics-player': new LyricsView(this.songState),
+      'queue-player': new QueueView(this.songState)
     };
-    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-    const p = 2 * l - q;
-    r = hue2rgb(p, q, h + 1/3);
-    g = hue2rgb(p, q, h);
-    b = hue2rgb(p, q, h - 1/3);
+    this.currentView = 'home-view';
   }
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
-
-function adjustSaturation(rgb, saturationIncrease = 20) {
-  const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
-  const newSaturation = Math.min(100, s + saturationIncrease);
-  const adjustedRgb = hslToRgb(h, newSaturation, l);
-  return adjustedRgb;
-}
-
-function rgbToCssColor(rgb) {
-  return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-}
-
-function applyGradient(img) {
-  try {
-    const colorThief = new ColorThief();
-    const dominantColor = colorThief.getColor(img);
-    const palette = colorThief.getPalette(img, 3);
-    const saturatedDominant = adjustSaturation(dominantColor, 80);
-    const saturatedSecondary = adjustSaturation(palette[1] || dominantColor, 30);
-    const color1 = rgbToCssColor(saturatedDominant);
-    const color2 = rgbToCssColor(saturatedSecondary);
-    document.body.style.background = `linear-gradient(to bottom, ${color1}, ${color2})`;
-    console.log(`Applied gradient: ${color1} to ${color2}`);
-  } catch (error) {
-    console.error('Error applying gradient:', error);
-    document.body.style.background = 'linear-gradient(to bottom, #d4a5d9, #6b48ff)';
+  
+  init() {
+    Object.values(this.views).forEach(view => view.init());
+    this.views['home-view'].show();
+    this.songState.subscribe(state => this.handleNavigation(state));
+    this.bindGlobalEvents();
+  }
+  
+  
+  handleNavigation(state) {
+    const currentViewId = state.navigationHistory[state.navigationHistory.length - 1];
+    if (currentViewId !== this.currentView) {
+      this.views[this.currentView]?.hide();
+      this.views[currentViewId]?.show();
+      this.currentView = currentViewId;
+      const backBtn = document.getElementById('global-back-btn');
+      if (backBtn) {
+        backBtn.classList.toggle('d-none', state.navigationHistory.length <= 1);
+      }
+    }
+  }
+  bindGlobalEvents() {
+    const playbackOverlay = document.getElementById('playback-overlay');
+    if (playbackOverlay) {
+      playbackOverlay.addEventListener('click', e => {
+        if (e.target.closest('.playback-control') || this.songState.getState().currentSong.title === 'Select a track') return;
+        this.songState.pushView('detailed-player');
+        this.views['home-view'].hide();
+        this.views['tracklist-view'].hide();
+        this.views['detailed-player'].show();
+        playbackOverlay.style.display = 'none';
+        const img = document.getElementById('detailed-album-art');
+        if (img && this.views['home-view'].applyGradient) {
+          img.onload = () => this.views['home-view'].applyGradient(img);
+        }
+      });
+    }
+    
+    const globalBackBtn = document.getElementById('global-back-btn');
+    if (globalBackBtn) {
+      globalBackBtn.addEventListener('click', () => {
+        const previousView = this.songState.popView();
+        if (previousView) {
+          this.views[this.currentView].hide();
+          this.views[previousView].show();
+          this.currentView = previousView;
+        }
+      });
+    }
+    
+    const offcanvas = document.getElementById('trackMenu');
+    const addToQueue = document.getElementById('add-to-queue');
+    const addToPlaylist = document.getElementById('add-to-playlist');
+    const createPlaylist = document.getElementById('create-playlist');
+    const deletePlaylist = document.getElementById('delete-playlist');
+    const renamePlaylist = document.getElementById('rename-playlist');
+    const playlistDropdown = document.getElementById('playlist-dropdown');
+    const playlistModal = document.getElementById('playlist-modal');
+    const playlistAction = document.getElementById('playlist-action');
+    
+    if (addToQueue && offcanvas) {
+      addToQueue.addEventListener('click', () => {
+        const songId = offcanvas.dataset.songId;
+        if (songId) {
+          this.songState.addToQueue(songId);
+          bootstrap.Offcanvas.getInstance(offcanvas)?.hide();
+        } else {
+          console.warn('No songId set on offcanvas');
+        }
+      });
+    }
+    
+    if (addToPlaylist && playlistDropdown) {
+      addToPlaylist.addEventListener('show.bs.dropdown', () => {
+        const state = this.songState.getState();
+        playlistDropdown.innerHTML = Object.keys(state.playlists).length > 0 ?
+          Object.keys(state.playlists).map(name => `
+              <li><a class="dropdown-item" href="#" data-playlist="${name}">${name}</a></li>
+            `).join('') :
+          '<li><a class="dropdown-item disabled" href="#">No playlists</a></li>';
+        playlistDropdown.querySelectorAll('a[data-playlist]').forEach(item => {
+          item.addEventListener('click', e => {
+            e.preventDefault();
+            const playlistName = e.target.dataset.playlist;
+            const songId = offcanvas.dataset.songId;
+            if (songId && this.songState.addToPlaylist(playlistName, songId)) {
+              bootstrap.Offcanvas.getInstance(offcanvas)?.hide();
+            } else {
+              alert('Failed to add to playlist');
+            }
+          });
+        });
+      });
+    }
+    
+    if (createPlaylist && playlistModal && playlistAction) {
+      createPlaylist.addEventListener('click', () => {
+        const modal = new bootstrap.Modal(playlistModal, { backdrop: true });
+        document.getElementById('playlist-modal-title').textContent = 'Create Playlist';
+        document.getElementById('playlist-name-input').value = '';
+        playlistAction.dataset.action = 'create';
+        modal.show();
+      });
+    }
+    
+    if (deletePlaylist && offcanvas) {
+      deletePlaylist.addEventListener('click', () => {
+        const playlistName = offcanvas.dataset.playlistName;
+        if (playlistName && confirm(`Delete playlist "${playlistName}"?`)) {
+          this.songState.deletePlaylist(playlistName);
+          bootstrap.Offcanvas.getInstance(offcanvas)?.hide();
+        }
+      });
+    }
+    
+    if (renamePlaylist && playlistModal && playlistAction) {
+      renamePlaylist.addEventListener('click', () => {
+        const playlistName = offcanvas.dataset.playlistName;
+        if (playlistName) {
+          const modal = new bootstrap.Modal(playlistModal, { backdrop: true });
+          document.getElementById('playlist-modal-title').textContent = 'Rename Playlist';
+          document.getElementById('playlist-name-input').value = playlistName;
+          playlistAction.dataset.action = `rename:${playlistName}`;
+          modal.show();
+        }
+      });
+    }
+    
+    if (playlistAction && playlistModal) {
+      playlistAction.addEventListener('click', () => {
+        const action = playlistAction.dataset.action;
+        const nameInput = document.getElementById('playlist-name-input').value.trim();
+        if (!nameInput) {
+          alert('Playlist name cannot be empty');
+          return;
+        }
+        let success = false;
+        if (action === 'create') {
+          success = this.songState.createPlaylist(nameInput);
+          if (!success) alert('Playlist already exists!');
+        } else if (action.startsWith('rename:')) {
+          const oldName = action.split(':')[1];
+          success = this.songState.renamePlaylist(oldName, nameInput);
+          if (!success) alert('New name already exists or invalid!');
+        }
+        if (success) {
+          const modal = bootstrap.Modal.getInstance(playlistModal);
+          modal?.hide();
+          // Clean up backdrop
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+          document.body.classList.remove('modal-open');
+          document.body.style.overflow = '';
+        }
+      });
+    }
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => new App().init());

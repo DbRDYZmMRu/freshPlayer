@@ -10,6 +10,13 @@
 </head>
 
 <body>
+  <nav class="navbar navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <button id="global-back-btn" class="btn btn-outline-light d-none">⬅</button>
+      <span class="navbar-brand">Music Player</span>
+    </div>
+  </nav>
+  
   <!-- Homepage View -->
   <div class="home-view" id="home-view">
     <div class="container-fluid px-3">
@@ -25,12 +32,19 @@
           <span class="visually-hidden">Next</span>
         </button>
       </div>
+      <h3>Albums</h3>
+      <div id="albums-section" class="album-section"></div>
       <h2 class="section-title mt-4 mb-3">Recently Played</h2>
       <div class="playlist-section" id="recently-played"></div>
       <h2 class="section-title mt-4 mb-3">Favourites</h2>
       <div class="playlist-section" id="favourites"></div>
       <h2 class="section-title mt-4 mb-3">Fresh Picks</h2>
       <div class="playlist-section" id="fresh-picks"></div>
+      <h2 class="section-title mt-4 mb-3">Custom Playlists</h2>
+      <div class="playlist-section mb-3">
+        <button class="btn btn-sm btn-outline-light" id="create-playlist-btn">Create Playlist</button>
+      </div>
+      <div class="playlist-section" id="playlists"></div>
     </div>
   </div>
   
@@ -111,7 +125,6 @@
   <!-- Lyrics View -->
   <div id="lyrics-player" class="lyrics-player">
     <div class="lyrics-content">
-      <button id="lyrics-back-btn" class="back-btn">⬅</button>
       <h2 id="lyrics-song-title" class="song-title"></h2>
       <p id="lyrics-artist" class="artist"></p>
       <div id="lyrics-container" class="lyrics-container"></div>
@@ -121,15 +134,11 @@
           <div class="progress-bar"></div>
           <div class="progress-dot"></div>
         </div>
-        
         <span id="lyrics-total-time" class="time">00:00</span>
       </div>
-      
       <div class="d-flex justify-content-around mt-3">
-        <button class="btn p-0 fs-5 bottom-controls" id="lyrics-queue-btn">📋</button>
-        <button class="btn p-0 fs-5 bottom-controls" id="lyrics-favourite-btn">🤍</button>
+        <button id="lyrics-toggle-btn" class="btn p-0 fs-5 bottom-controls">🎵 </button>
       </div>
-      
       <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
         <button id="lyrics-shuffle-btn" class="control-btn btn p-0">🔀</button>
         <button id="lyrics-rewind-btn" class="control-btn btn p-0">⏪</button>
@@ -143,9 +152,10 @@
     <div id="lyrics-background"></div>
   </div>
   
+  <!-- Queue View -->
   <div id="queue-player" class="queue-player hidden">
     <div class="header">
-      <button id="queue-back-btn" class="back-btn">⬅</button>
+      <button id="queue-toggle-btn" class="toggle-btn">🎵</button>
       <div class="title fs-4 fw-bold">Queue</div>
       <div class="subtitle fs-5 opacity-75"></div>
       <button id="queue-clear-btn" class="btn btn-sm btn-outline-light mt-2">Clear Queue</button>
@@ -161,10 +171,36 @@
     </div>
     <div class="offcanvas-body">
       <div class="offcanvas-menu-item" id="add-to-queue">Add to Queue</div>
-      <div class="offcanvas-menu-item" id="add-to-playlist">Add to Playlist</div>
+      <div class="offcanvas-menu-item dropdown" id="add-to-playlist">
+        <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          Add to Playlist
+        </a>
+        <ul class="dropdown-menu" id="playlist-dropdown"></ul>
+      </div>
       <div class="offcanvas-menu-item" id="create-playlist">Create Playlist</div>
+      <div class="offcanvas-menu-item" id="delete-playlist">Delete Playlist</div>
+      <div class="offcanvas-menu-item" id="rename-playlist">Rename Playlist</div>
       <div class="offcanvas-menu-item">Share</div>
       <div class="offcanvas-menu-item">View Details</div>
+    </div>
+  </div>
+  
+  <!-- Playlist Modal -->
+  <div class="modal fade" id="playlist-modal" tabindex="-1" aria-labelledby="playlist-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header">
+          <h5 class="modal-title" id="playlist-modal-title">Create Playlist</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control bg-dark text-light" id="playlist-name-input" placeholder="Playlist name">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="playlist-action" data-action="create">Create</button>
+        </div>
+      </div>
     </div>
   </div>
   
