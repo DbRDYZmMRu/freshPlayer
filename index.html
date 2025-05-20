@@ -52,14 +52,14 @@
   <div class="music-player hidden" id="tracklist-view">
     <nav class="navbar fixed-top" id="sticky-navbar">
       <div class="d-flex align-items-center">
-        <img id="thumbnail-art" alt="Album Art">
+        <img id="thumbnail-art" alt="Album Art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
         <span class="album-name" id="navbar-album-name"></span>
       </div>
     </nav>
     <div class="album-header" id="album-header">
       <button class="back-btn" id="tracklist-back-btn">←</button>
       <div class="album-art-container mt-5">
-        <img id="main-album-art" alt="Album Art" class="album-art">
+        <img id="main-album-art" alt="Album Art" class="album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
       </div>
       <div class="album-info">
         <div class="album-name fs-4 fw-bold" id="album-title"></div>
@@ -67,6 +67,27 @@
       </div>
     </div>
     <div class="tracklist" id="tracklist"></div>
+  </div>
+  
+  <!-- Playlist View -->
+  <div class="music-player hidden" id="playlist-view">
+    <nav class="navbar fixed-top" id="playlist-sticky-navbar">
+      <div class="d-flex align-items-center">
+        <img id="playlist-thumbnail-art" alt="Playlist Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
+        <span class="album-name" id="playlist-navbar-name"></span>
+      </div>
+    </nav>
+    <div class="album-header" id="playlist-header">
+      <button class="back-btn" id="playlist-back-btn">←</button>
+      <div class="album-art-container mt-5">
+        <img id="playlist-main-art" alt="Playlist Cover" class="album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
+      </div>
+      <div class="album-info">
+        <div class="album-name fs-4 fw-bold" id="playlist-title"></div>
+        <div class="release-year fs-5 opacity-75" id="playlist-song-count"></div>
+      </div>
+    </div>
+    <div class="tracklist" id="playlist-tracklist"></div>
   </div>
   
   <!-- Playback Footer -->

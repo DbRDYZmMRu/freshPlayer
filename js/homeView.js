@@ -1,9 +1,9 @@
 // js/homeView.js
 import { TracklistView } from './tracklistView.js';
-import { PlaylistView } from './playlistView.js';
+import { generateCollage } from './utils.js'; // Import collage utility
 
 export class HomeView {
- constructor(songState, app) {
+  constructor(songState, app) {
     this.songState = songState;
     this.app = app;
     this.homeView = document.getElementById('home-view');
@@ -14,7 +14,6 @@ export class HomeView {
     this.playlistsContainer = document.getElementById('playlists');
     this.albumsSection = document.getElementById('albums-section');
     this.carousel = null;
-    this.playlistViews = {};
   }
   
   init() {
@@ -41,7 +40,7 @@ export class HomeView {
     this.bindEvents();
   }
   
-  render(state = this.songState.getState()) {
+  async render(state = this.songState.getState()) {
     try {
       if (!this.carouselInner) {
         console.error('carousel-inner element not found');
@@ -64,31 +63,21 @@ export class HomeView {
       this.renderPlaylist(this.freshPicks, state.freshPicks, state.songs, 'Fresh Picks');
       
       if (this.playlistsContainer) {
-        Object.values(this.playlistViews).forEach(view => view.hide());
-        this.playlistViews = {};
-        this.playlistsContainer.innerHTML = '';
-        if (Array.isArray(Object.keys(state.playlists))) {
-          Object.keys(state.playlists).forEach(name => {
-            try {
-              const playlistDiv = document.createElement('div');
-              const safeId = `playlist-${name.replace(/\s+/g, '-')}-${Date.now()}`;
-              playlistDiv.id = safeId;
-              playlistDiv.className = 'playlist-section';
-              this.playlistsContainer.appendChild(playlistDiv);
-              const playlistView = new PlaylistView(
-                this.songState,
-                safeId,
-                name,
-                name,
-                this.applyGradient.bind(this)
-              );
-              playlistView.init('home-view');
-              this.playlistViews[name] = playlistView;
-            } catch (error) {
-              console.error(`Failed to render playlist "${name}":`, error);
-            }
-          });
-        }
+        this.playlistsContainer.innerHTML = Array.isArray(Object.keys(state.playlists)) && Object.keys(state.playlists).length > 0 ?
+          await Promise.all(Object.entries(state.playlists).map(async ([name, songIds]) => {
+            const tracks = songIds
+              .map(id => state.songs.find(s => s.id === id))
+              .filter(s => s);
+            const collageSrc = await generateCollage(tracks);
+            return `
+              <div class="playlist-item" data-playlist-name="${name}">
+                <img src="${collageSrc}" alt="${name}">
+                <div class="track-title">${name}</div>
+                <div class="track-artist">${tracks.length} songs</div>
+              </div>
+            `;
+          })).then(html => html.join('')) :
+          '<p>No playlists available</p>';
       }
       
       if (this.albumsSection) {

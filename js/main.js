@@ -5,6 +5,7 @@ import { TracklistView } from './tracklistView.js';
 import { DetailedView } from './detailedView.js';
 import { LyricsView } from './lyricsView.js';
 import { QueueView } from './queueView.js';
+import { PlaylistView } from './playlistView.js';
 
 class App {
   constructor() {
@@ -14,7 +15,8 @@ class App {
       'tracklist-view': new TracklistView(this.songState, 'tracklist-view', 'Album', 'tracks', 'album', this.views?.['home-view']?.applyGradient?.bind(this.views['home-view']), this),
       'detailed-player': new DetailedView(this.songState, this),
       'lyrics-player': new LyricsView(this.songState, this),
-      'queue-player': new QueueView(this.songState, this)
+      'queue-player': new QueueView(this.songState, this),
+      'playlist-view': null // Initialized dynamically for each playlist
     };
     this.currentView = 'home-view';
     this.isNavigating = false;
@@ -22,9 +24,12 @@ class App {
   
   init() {
     console.log('App.init called, views:', Object.keys(this.views));
-    Object.values(this.views).forEach(view => {
-      console.log(`Initializing view: ${view.constructor.name}`);
-      view.init(this.views['home-view']?.applyGradient?.bind(this.views['home-view']));
+    // Initialize static views
+    Object.entries(this.views).forEach(([id, view]) => {
+      if (view) {
+        console.log(`Initializing view: ${view.constructor.name}`);
+        view.init(this.views['home-view']?.applyGradient?.bind(this.views['home-view']));
+      }
     });
     this.views['home-view'].show();
     this.songState.subscribe(state => this.handleNavigation(state));
@@ -34,12 +39,11 @@ class App {
   handleNavigation(state) {
     const currentViewId = state.navigationHistory[state.navigationHistory.length - 1] || 'home-view';
     console.log('handleNavigation called, currentViewId:', currentViewId, 'previous currentView:', this.currentView, 'isPlaying:', state.currentSong.isPlaying);
-    if (!this.views[currentViewId]) {
+    if (!this.views[currentViewId] && currentViewId !== 'playlist-view') {
       console.warn(`View ${currentViewId} not found, defaulting to home-view`);
       this.songState.pushView('home-view');
       return;
     }
-    // Skip history-based navigation if in overlay view
     const overlayViews = ['lyrics-player', 'queue-player'];
     if (overlayViews.includes(this.currentView)) {
       console.log(`In overlay view ${this.currentView}, skipping history navigation to ${currentViewId}`);
@@ -47,7 +51,9 @@ class App {
     }
     console.log(`Processing view: ${currentViewId}`);
     this.views[this.currentView]?.hide();
-    this.views[currentViewId].show();
+    if (this.views[currentViewId]) {
+      this.views[currentViewId].show();
+    }
     this.currentView = currentViewId;
     this.isNavigating = false;
     const backBtn = document.getElementById('global-back-btn');
@@ -76,6 +82,8 @@ class App {
       const playbackAlbum = playbackOverlay.querySelector('.playback-album');
       const playbackControl = document.getElementById('playback-control');
       
+      console.log('Binding playback-overlay events, playbackControl exists:', !!playbackControl, 'id:', playbackControl?.id);
+      
       this.songState.subscribe(state => {
         console.log('Playback overlay updating, isPlaying:', state.currentSong.isPlaying, 'currentView:', this.currentView);
         playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
@@ -85,7 +93,17 @@ class App {
       });
       
       playbackOverlay.addEventListener('click', e => {
-        if (e.target.closest('.playback-control') || this.songState.getState().currentSong.title === 'Select a track') return;
+        console.log('playback-overlay clicked, target:', e.target.tagName, 'id:', e.target.id, 'class:', e.target.className);
+        if (e.target.id === 'playback-control' || e.target.closest('#playback-control')) {
+          e.stopPropagation();
+          console.log('Playback control clicked, isPlaying:', this.songState.getState().currentSong.isPlaying, 'audio src:', this.songState.audio.src, 'audio paused:', this.songState.audio.paused);
+          this.songState.togglePlay();
+          return;
+        }
+        if (this.songState.getState().currentSong.title === 'Select a track') {
+          console.log('No song selected, skipping navigation');
+          return;
+        }
         if (this.isNavigating) {
           console.log('Navigation in progress, skipping playback overlay click');
           return;
@@ -104,13 +122,11 @@ class App {
         }
       });
       
-      if (playbackControl) {
-        playbackControl.addEventListener('click', e => {
-          e.stopPropagation();
-          console.log('Playback control clicked, toggling play');
-          this.songState.togglePlay();
-        });
+      if (!playbackControl) {
+        console.error('playback-control element not found during binding');
       }
+    } else {
+      console.error('playback-overlay element not found');
     }
     
     const globalBackBtn = document.getElementById('global-back-btn');
@@ -230,6 +246,32 @@ class App {
           document.body.style.overflow = '';
         }
       });
+    }
+    
+    // Bind playlist section click handler
+    const playlistsSection = document.getElementById('playlists');
+    if (playlistsSection) {
+      playlistsSection.addEventListener('click', e => {
+        const playlistItem = e.target.closest('.playlist-item');
+        if (playlistItem && !this.isNavigating) {
+          const playlistName = playlistItem.dataset.playlistName;
+          console.log('Playlist item clicked:', playlistName, 'current history:', this.songState.getState().navigationHistory);
+          this.isNavigating = true;
+          // Initialize PlaylistView dynamically
+          this.views['playlist-view'] = new PlaylistView(
+            this.songState,
+            'playlist-view',
+            playlistName,
+            playlistName,
+            this.views['home-view']?.applyGradient?.bind(this.views['home-view']),
+            this
+          );
+          this.views['playlist-view'].init('home-view');
+          this.songState.pushView('playlist-view');
+        }
+      });
+    } else {
+      console.error('playlists section not found');
     }
   }
 }
