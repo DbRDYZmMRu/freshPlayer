@@ -37,6 +37,20 @@ export class SongState {
       this.state.currentSong.isPlaying = false;
       this.notify();
     });
+    this.audio.addEventListener('pause', () => {
+      console.log('Audio paused event, isPlaying:', this.state.currentSong.isPlaying);
+      if (this.state.currentSong.isPlaying) {
+        this.state.currentSong.isPlaying = false;
+        this.notify();
+      }
+    });
+    this.audio.addEventListener('play', () => {
+      console.log('Audio play event, isPlaying:', this.state.currentSong.isPlaying);
+      if (!this.state.currentSong.isPlaying) {
+        this.state.currentSong.isPlaying = true;
+        this.notify();
+      }
+    });
   }
   
   async loadData() {
@@ -142,7 +156,9 @@ export class SongState {
   notify() {
     console.log('Notifying subscribers, current state:', {
       navigationHistory: [...this.state.navigationHistory],
-      currentView: this.state.navigationHistory[this.state.navigationHistory.length - 1]
+      currentView: this.state.navigationHistory[this.state.navigationHistory.length - 1],
+      isPlaying: this.state.currentSong.isPlaying,
+      currentSong: this.state.currentSong.title
     });
     this.subscribers.forEach(callback => {
       try {
@@ -224,16 +240,6 @@ export class SongState {
     }));
   }
   
-  notify() {
-    this.subscribers.forEach(callback => {
-      try {
-        callback(this.state);
-      } catch (error) {
-        console.error('Error in subscriber callback:', error);
-      }
-    });
-  }
-  
   setSong(songId, fromQueue = false) {
     const song = this.state.songs.find(s => String(s.id) === String(songId)) || this.state.currentSong;
     const album = this.state.albums.find(a => a.id === song.album_id);
@@ -249,10 +255,11 @@ export class SongState {
     this.saveState();
     this.notify();
     this.audio.play().then(() => {
+      console.log('setSong: Audio play succeeded');
       this.state.currentSong.isPlaying = true;
       this.notify();
     }).catch(error => {
-      console.error('Playback error:', error);
+      console.error('setSong: Playback error:', error);
       this.state.currentSong.isPlaying = false;
       this.notify();
     });
@@ -270,27 +277,49 @@ export class SongState {
   }
   
   togglePlay() {
-    if (!this.state.currentSong.mp3_url) return;
+    console.log('togglePlay called, isPlaying:', this.state.currentSong.isPlaying, 'audio src:', this.audio.src, 'audio paused:', this.audio.paused, 'readyState:', this.audio.readyState);
+    if (!this.state.currentSong.mp3_url) {
+      console.log('No mp3_url, cannot toggle play');
+      return;
+    }
     if (!this.hasStarted) {
+      console.log('Playing silent audio to enable autoplay');
       this.silentAudio.play().catch(() => console.log('Silent audio blocked'));
       document.querySelectorAll('audio').forEach(audio => {
-        if (audio !== this.audio && !audio.paused) audio.pause();
+        if (audio !== this.audio && !audio.paused) {
+          console.log('Pausing other audio element');
+          audio.pause();
+        }
       });
       this.hasStarted = true;
     }
-    if (this.state.currentSong.isPlaying) {
-      this.audio.pause();
-      this.state.currentSong.isPlaying = false;
-    } else {
-      this.audio.play().then(() => {
-        this.state.currentSong.isPlaying = true;
-      }).catch(error => {
-        console.error('Playback error:', error);
+    try {
+      if (this.audio.paused) {
+        console.log('Attempting to play audio');
+        this.audio.play().then(() => {
+          console.log('Audio play succeeded');
+          this.state.currentSong.isPlaying = true;
+          this.saveState();
+          this.notify();
+        }).catch(error => {
+          console.error('Audio play failed:', error);
+          this.state.currentSong.isPlaying = false;
+          this.saveState();
+          this.notify();
+        });
+      } else {
+        console.log('Pausing audio');
+        this.audio.pause();
         this.state.currentSong.isPlaying = false;
-      });
+        this.saveState();
+        this.notify();
+      }
+    } catch (error) {
+      console.error('Error in togglePlay:', error);
+      this.state.currentSong.isPlaying = false;
+      this.saveState();
+      this.notify();
     }
-    this.saveState();
-    this.notify();
   }
   
   toggleShuffle() {
@@ -397,53 +426,6 @@ export class SongState {
     return true;
   }
   
-  pushView(viewId) {
-    this.state.navigationHistory.push(viewId);
-    this.saveState();
-    this.notify();
-  }
-  
-  popView() {
-    if (this.state.navigationHistory.length <= 1) {
-      this.state.navigationHistory = ['home-view'];
-      this.saveState();
-      this.notify();
-      return 'home-view';
-    }
-    
-    const notAllowedViews = ['lyrics-player', 'queue-player'];
-    this.state.navigationHistory.pop();
-    let previousView = 'home-view';
-    
-    for (let i = this.state.navigationHistory.length - 1; i >= 0; i--) {
-      if (!notAllowedViews.includes(this.state.navigationHistory[i])) {
-        previousView = this.state.navigationHistory[i];
-        break;
-      }
-    }
-    
-    this.state.navigationHistory = this.state.navigationHistory.slice(0, this.state.navigationHistory.indexOf(previousView) + 1);
-    this.saveState();
-    this.notify();
-    return previousView;
-  }
-  
-  getPreviousAllowedView() {
-    const notAllowedViews = ['lyrics-player', 'queue-player'];
-    for (let i = this.state.navigationHistory.length - 1; i >= 0; i--) {
-      if (!notAllowedViews.includes(this.state.navigationHistory[i])) {
-        return this.state.navigationHistory[i];
-      }
-    }
-    return 'home-view';
-  }
-  
-  clearNavigationHistory() {
-    this.state.navigationHistory = ['home-view'];
-    this.saveState();
-    this.notify();
-  }
-  
   playNext() {
     if (this.state.queue.length > 0) {
       const nextSongId = this.state.queue[0];
@@ -498,7 +480,12 @@ export class SongState {
     if (this.state.repeat === 'one') {
       this.audio.currentTime = 0;
       this.audio.play().then(() => {
+        console.log('handleSongEnd: Audio play succeeded');
         this.state.currentSong.isPlaying = true;
+        this.notify();
+      }).catch(error => {
+        console.error('handleSongEnd: Playback error:', error);
+        this.state.currentSong.isPlaying = false;
         this.notify();
       });
     } else {
