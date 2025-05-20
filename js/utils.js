@@ -1,78 +1,30 @@
 // js/utils.js
-export async function generateCollage(tracks) {
-  const placeholder = 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+export function generateCollage(tracks, size = 'small') {
+  const placeholder = '/proxy-image?url=https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'; // Local placeholder
   if (!tracks || !Array.isArray(tracks) || tracks.length === 0) {
-    console.warn('No valid tracks provided for collage, returning placeholder');
-    return placeholder;
+    console.warn('No valid tracks provided for collage, returning single placeholder');
+    return `<img src="${placeholder}" class="collage-single collage-single-${size}" alt="Placeholder" onerror="this.src='${placeholder}'">`;
   }
-  
-  const canvas = document.createElement('canvas');
-  canvas.width = 120; // Match playlist-item size
-  canvas.height = 120;
-  const ctx = canvas.getContext('2d');
   
   // Get up to 4 thumbnails
   const thumbnails = tracks
     .slice(0, 4)
     .map((song) => song?.thumbnail || placeholder);
-  while (thumbnails.length < 4) thumbnails.push(placeholder); // Fill with placeholder
+  while (thumbnails.length < 4) thumbnails.push(placeholder);
   
-  // Load images
-  let loadedImages = 0;
-  const imageObjects = [];
-  const loadPromises = thumbnails.map(
-    (src) =>
-    new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.src = src;
-      img.onload = () => {
-        loadedImages++;
-        imageObjects.push(img);
-        resolve();
-      };
-      img.onerror = () => {
-        console.warn(`Failed to load image: ${src}, using placeholder`);
-        const placeholderImg = new Image();
-        placeholderImg.src = placeholder;
-        placeholderImg.onload = () => {
-          loadedImages++;
-          imageObjects.push(placeholderImg);
-          resolve();
-        };
-        placeholderImg.onerror = () => {
-          loadedImages++;
-          imageObjects.push(new Image()); // Fallback to empty
-          resolve();
-        };
-      };
-    })
-  );
+  // Generate 2x2 grid HTML with size-specific class
+  const html = `
+    <div class="collage-grid collage-grid-${size}">
+      ${thumbnails
+        .map(
+          (src, index) => `
+            <img src="${src}" class="collage-img" alt="Track ${index + 1}" loading="lazy" onerror="this.src='${placeholder}'">
+          `
+        )
+        .join('')}
+    </div>
+  `;
   
-  // Wait for all images to load
-  await Promise.all(loadPromises);
-  
-  // Draw 2x2 collage
-  if (loadedImages === thumbnails.length) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    imageObjects.forEach((img, index) => {
-      const size = canvas.width / 2; // 60px
-      const x = (index % 2) * size;
-      const y = Math.floor(index / 2) * size;
-      ctx.drawImage(img, x, y, size, size);
-    });
-  } else {
-    console.warn('Not all images loaded, returning placeholder');
-    return placeholder;
-  }
-  
-  // Return the collage as a data URL
-  try {
-    const dataUrl = canvas.toDataURL('image/png');
-    console.log('Generated collage:', dataUrl);
-    return dataUrl;
-  } catch (error) {
-    console.error('Error generating collage data URL:', error);
-    return placeholder;
-  }
+  console.log(`Generated collage HTML (size: ${size}):`, html);
+  return html;
 }

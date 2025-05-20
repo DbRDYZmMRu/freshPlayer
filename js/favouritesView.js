@@ -22,7 +22,7 @@ export class FavouritesView {
     this.applyGradientCallback = applyGradientCallback;
     this.collageCache = null;
   }
-  
+
   init(backTarget = 'home-view') {
     if (!this.backBtn) console.error('favourites-back-btn element not found in DOM');
     if (!this.navbar) console.error('favourites-sticky-navbar element not found in DOM');
@@ -30,43 +30,46 @@ export class FavouritesView {
     if (!this.albumArtContainer) console.error('album-art-container element not found in DOM');
     if (!this.thumbnailArt) console.error('thumbnail-art element not found in DOM');
     this.updateUI(this.songState.getState());
-    this.songState.subscribe(state => this.updateUI(state));
+    this.songState.subscribe((state) => this.updateUI(state));
     this.bindEvents(backTarget);
     this.updateNavbar();
   }
-  
-  async generateCollage(tracks) {
-    const placeholder = 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
-    return tracks.length > 0 ?
-      await generateCollage(tracks.map(t => ({ ...t, thumbnail: t.thumbnail || placeholder }))) :
-      placeholder;
+
+  generateCollage(tracks) {
+    const placeholder = '/images/placeholder.png';
+    return tracks.length > 0
+      ? generateCollage(tracks.map((t) => ({ ...t, thumbnail: t.thumbnail || placeholder })), 'large')
+      : `<img src="${placeholder}" class="collage-single collage-single-large" alt="Placeholder" onerror="this.src='${placeholder}'">`;
   }
-  
+
   async updateUI(state) {
     const tracks = (state.favourites || [])
-      .map(songId => state.songs.find(s => s.id === songId))
-      .filter(s => s);
+      .map((songId) => state.songs.find((s) => s.id === songId))
+      .filter((s) => s);
     this.titleElement.textContent = this.title;
     this.subtitleElement.textContent = `${tracks.length} songs`;
     this.navbarTitle.textContent = this.title;
-    
-    const collageSrc = await this.generateCollage(tracks);
-    this.collageCache = collageSrc;
-    
+
+    const collageHtml = this.collageCache && tracks.length > 0 ? this.collageCache : this.generateCollage(tracks);
+    this.collageCache = collageHtml;
+
     if (this.mainAlbumArt) {
-      this.mainAlbumArt.src = collageSrc;
-      console.log('Set favourites-main-art src:', collageSrc);
+      this.mainAlbumArt.innerHTML = collageHtml;
+      console.log('Set favourites-main-art HTML:', collageHtml);
     }
     if (this.thumbnailArt) {
-      this.thumbnailArt.src = collageSrc;
-      console.log('Set favourites-thumbnail-art src:', collageSrc);
+      const firstTrack = tracks[0];
+      this.thumbnailArt.src = firstTrack?.thumbnail || '/images/placeholder.png';
+      console.log('Set favourites-thumbnail-art src:', this.thumbnailArt.src);
     }
-    
-    this.tracklist.innerHTML = tracks.length > 0 ? tracks
-      .map((song, index) => `
+
+    this.tracklist.innerHTML = tracks.length > 0
+      ? tracks
+          .map(
+            (song, index) => `
         <div class="tracklist-item ${state.currentSong.id === song.id ? 'active' : ''}" data-track="${index + 1}" data-song-id="${song.id}" data-title="${song.title}" data-duration="${song.duration}" draggable="true">
           <div class="track-info">
-            <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" class="track-thumbnail" alt="${song.title}">
+            <img src="${song.thumbnail || '/images/placeholder.png'}" class="track-thumbnail" alt="${song.title}" onerror="this.src='/images/placeholder.png'">
             <span class="track-number opacity-75">${index + 1}</span>
             <div class="track-details">
               <div class="track-title">${song.title}</div>
@@ -75,9 +78,12 @@ export class FavouritesView {
           </div>
           <button class="remove-song btn p-0" data-song-id="${song.id}" title="Remove from Favourites">🗑️</button>
         </div>
-      `).join('') : '<p>No songs in Favourites</p>';
+      `
+          )
+          .join('')
+      : '<p>No songs in Favourites</p>';
   }
-  
+
   bindEvents(backTarget) {
     if (this.backBtn) {
       this.backBtn.addEventListener('click', () => {
@@ -87,22 +93,22 @@ export class FavouritesView {
         this.app.showView(previousView || backTarget);
       });
     }
-    
+
     if (this.tracklist) {
-      this.tracklist.addEventListener('dragstart', e => {
+      this.tracklist.addEventListener('dragstart', (e) => {
         const item = e.target.closest('.tracklist-item');
         if (item) {
           e.dataTransfer.setData('text/plain', item.dataset.songId);
           item.classList.add('dragging');
         }
       });
-      
-      this.tracklist.addEventListener('dragend', e => {
+
+      this.tracklist.addEventListener('dragend', (e) => {
         const item = e.target.closest('.tracklist-item');
         if (item) item.classList.remove('dragging');
       });
-      
-      this.tracklist.addEventListener('dragover', e => {
+
+      this.tracklist.addEventListener('dragover', (e) => {
         e.preventDefault();
         const afterElement = this.getDragAfterElement(e.clientY);
         const draggable = this.tracklist.querySelector('.dragging');
@@ -112,25 +118,25 @@ export class FavouritesView {
           this.tracklist.insertBefore(draggable, afterElement);
         }
       });
-      
-      this.tracklist.addEventListener('drop', e => {
+
+      this.tracklist.addEventListener('drop', (e) => {
         e.preventDefault();
         const songId = e.dataTransfer.getData('text/plain');
-        const newOrder = Array.from(this.tracklist.querySelectorAll('.tracklist-item')).map(item => item.dataset.songId);
+        const newOrder = Array.from(this.tracklist.querySelectorAll('.tracklist-item')).map((item) => item.dataset.songId);
         this.songState.reorderFavourites(newOrder);
       });
-      
-      this.tracklist.addEventListener('click', e => {
+
+      this.tracklist.addEventListener('click', (e) => {
         const removeBtn = e.target.closest('.remove-song');
         if (removeBtn) {
           const songId = removeBtn.dataset.songId;
-          this.songState.toggleFavourite(songId); // Use toggleFavourite instead
+          this.songState.toggleFavourite(songId);
           console.log(`Removed song ${songId} from Favourites`);
           return;
         }
         const item = e.target.closest('.tracklist-item');
         if (item) {
-          document.querySelectorAll('.tracklist-item').forEach(i => i.classList.remove('active'));
+          document.querySelectorAll('.tracklist-item').forEach((i) => i.classList.remove('active'));
           item.classList.add('active');
           const songId = item.dataset.songId;
           this.songState.setSong(songId);
@@ -145,24 +151,26 @@ export class FavouritesView {
         }
       });
     }
-    
+
     window.addEventListener('scroll', this.debounce(this.updateNavbar.bind(this), 150));
     window.addEventListener('resize', this.updateNavbar.bind(this));
   }
-  
+
   getDragAfterElement(y) {
     const draggableElements = [...this.tracklist.querySelectorAll('.tracklist-item:not(.dragging)')];
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset: offset, element: child };
-      } else {
+    return draggableElements.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        }
         return closest;
-      }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+      },
+      { offset: Number.NEGATIVE_INFINITY }
+    ).element;
   }
-  
+
   debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -174,14 +182,14 @@ export class FavouritesView {
       timeout = setTimeout(later, wait);
     };
   }
-  
+
   updateNavbar() {
     if (!this.navbar || !this.header || !this.albumArtContainer) {
       console.error('Missing elements in updateNavbar:', {
         navbar: !!this.navbar,
         header: !!this.header,
         albumArtContainer: !!this.albumArtContainer,
-        thumbnailArt: !!this.thumbnailArt
+        thumbnailArt: !!this.thumbnailArt,
       });
       return;
     }
@@ -203,13 +211,13 @@ export class FavouritesView {
       this.albumArtContainer.classList.remove('sticky');
     }
   }
-  
+
   show() {
     this.container.classList.remove('hidden');
     document.getElementById('playback-overlay').style.display = 'flex';
     this.updateNavbar();
   }
-  
+
   hide() {
     this.container.classList.add('hidden');
   }

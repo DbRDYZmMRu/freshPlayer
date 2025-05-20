@@ -57,7 +57,7 @@
       </div>
     </nav>
     <div class="album-header" id="album-header">
-      <button class="back-btn" id="tracklist-back-btn">←</button>
+      <button class="back-btn" id="tracklist-back-btn"></button>
       <div class="album-art-container mt-5">
         <img id="main-album-art" alt="Album Art" class="album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
       </div>
@@ -78,7 +78,7 @@
       </div>
     </nav>
     <div class="album-header" id="playlist-header">
-      <button class="back-btn" id="playlist-back-btn">←</button>
+      <button class="back-btn" id="playlist-back-btn"></button>
       <div class="album-art-container mt-5">
         <img id="playlist-main-art" alt="Playlist Cover" class="album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
       </div>
@@ -90,48 +90,47 @@
     <div class="tracklist" id="playlist-tracklist"></div>
   </div>
   
-<!-- Recently Played View -->
-<div class="music-player hidden" id="recently-played-view">
-  <nav class="navbar fixed-top" id="recently-played-sticky-navbar">
-    <div class="d-flex align-items-center">
-      <img id="recently-played-thumbnail-art" alt="Recently Played Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
-      <span class="album-name" id="recently-played-navbar-name">Recently Played</span>
+  <!-- Recently Played View -->
+  <div class="music-player hidden" id="recently-played-view">
+    <nav class="navbar fixed-top" id="recently-played-sticky-navbar">
+      <div class="d-flex align-items-center">
+        <img id="recently-played-thumbnail-art" class="thumbnail-art" alt="Recently Played Cover" src="/images/placeholder.png" onerror="this.src='/images/placeholder.png'">
+        <span class="album-name" id="recently-played-navbar-name">Recently Played</span>
+      </div>
+    </nav>
+    <div class="album-header" id="recently-played-header">
+      <button class="back-btn" id="recently-played-back-btn"></button>
+      <div class="album-art-container recently-played mt-5">
+        <div id="recently-played-main-art" class="album-art"></div>
+      </div>
+      <div class="album-info">
+        <div class="album-name fs-4 fw-bold" id="recently-played-title">Recently Played</div>
+        <div class="release-year fs-5 opacity-75" id="recently-played-song-count"></div>
+      </div>
     </div>
-    <button class="back-btn" id="recently-played-back-btn">←</button>
-  </nav>
-  <div class="album-header" id="recently-played-header">
-    <div class="album-art-container mt-5">
-      <img id="recently-played-main-art" class="album-art" alt="Recently Played Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
-    </div>
-    <div class="album-info">
-      <div class="album-name fs-4 fw-bold" id="recently-played-title">Recently Played</div>
-      <div class="release-year fs-5 opacity-75" id="recently-played-song-count"></div>
-    </div>
+    <div class="tracklist" id="recently-played-tracklist"></div>
   </div>
-  <div class="tracklist" id="recently-played-tracklist"></div>
-</div>  
   
   <!-- Favourites View -->
   <div class="music-player hidden" id="favourites-view">
     <nav class="navbar fixed-top" id="favourites-sticky-navbar">
       <div class="d-flex align-items-center">
-        <img id="favourites-thumbnail-art" alt="Favourites Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
-        <span class="album-name" id="favourites-navbar-name"></span>
+        <img id="favourites-thumbnail-art" class="thumbnail-art" alt="Favourites Cover" src="/images/placeholder.png" onerror="this.src='/images/placeholder.png'">
+        <span class="album-name" id="favourites-navbar-name">Favourites</span>
       </div>
     </nav>
     <div class="album-header" id="favourites-header">
-      <button class="back-btn" id="favourites-back-btn">←</button>
-      <div class="album-art-container mt-5">
-        <img id="favourites-main-art" alt="Favourites Cover" class="album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
+      <button class="back-btn" id="favourites-back-btn"></button>
+      <div class="album-art-container favourites mt-5">
+        <div id="favourites-main-art" class="album-art"></div>
       </div>
       <div class="album-info">
-        <div class="album-name fs-4 fw-bold" id="favourites-title"></div>
+        <div class="album-name fs-4 fw-bold" id="favourites-title">Favourites</div>
         <div class="release-year fs-5 opacity-75" id="favourites-song-count"></div>
       </div>
     </div>
     <div class="tracklist" id="favourites-tracklist"></div>
   </div>
-  
   
   
   <!-- Playback Footer -->
@@ -146,7 +145,7 @@
   
   <!-- Detailed Player View -->
   <div class="detailed-player" id="detailed-player">
-    <button class="back-btn" id="detailed-toggle-btn">←</button>
+    <button class="back-btn" id="detailed-toggle-btn"></button>
     <div class="p-3">
       <div class="album-art-container d-flex justify-content-center mb-5">
         <img id="detailed-album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" alt="Album Art" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">

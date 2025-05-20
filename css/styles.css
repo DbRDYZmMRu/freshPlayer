@@ -1253,22 +1253,6 @@ body {
   opacity: 1; /* Always visible, no hover required */
 }
 
-/* css/styles.css (append to existing file) */
-
-/* Ensure consistent sizing for Recently Played collage */
-.album-art-container {
-  width: 120px;
-  height: 120px;
-  overflow: hidden;
-  margin: 0 auto;
-}
-
-.album-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Prevent distortion */
-  border-radius: 8px;
-}
 
 /* Fix navbar thumbnail */
 #recently-played-thumbnail-art {
@@ -1287,7 +1271,7 @@ body {
 }
 
 /* Ensure HomeView collages are consistent */
-.cover-container {
+.view-all-cover-container {
   position: relative;
   width: 120px;
   height: 120px;
@@ -1295,7 +1279,7 @@ body {
   flex-shrink: 0;
 }
 
-.cover-container img {
+.view-all-cover-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1317,3 +1301,47 @@ body {
   font-size: 14px;
   opacity: 1;
 }
+
+/* Collage grid */
+.collage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.collage-grid-small {
+  width: 120px;
+  height: 120px;
+}
+
+.collage-grid-large {
+  width: 300px;
+  height: 300px;
+}
+
+.collage-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Single image fallback */
+.collage-single {
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.collage-single-small {
+  width: 120px;
+  height: 120px;
+}
+
+.collage-single-large {
+  width: 300px;
+  height: 300px;
+}
+
+
+

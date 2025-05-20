@@ -38,11 +38,23 @@ export class HomeView {
       }
     }
     this.render();
-    this.songState.subscribe((state) => {
+    this.songState.subscribe(this.debounce((state) => {
       console.log('HomeView: State updated, favourites:', state.favourites, 'length:', state.favourites?.length || 0);
       this.render(state);
-    });
+    }, 150));
     this.bindEvents();
+  }
+
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
   }
 
   async render(state = this.songState.getState()) {
@@ -56,7 +68,7 @@ export class HomeView {
               .map(
                 (album, index) => `
               <div class="carousel-item ${index === 0 ? 'active' : ''}" data-album-id="${album.id}">
-                <img src="${album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" class="d-block w-100" alt="${album.title}">
+                <img src="${album.cover || '/images/placeholder.png'}" class="d-block w-100" alt="${album.title}" onerror="this.src='/images/placeholder.png'">
                 <div class="carousel-caption d-block">
                   <h5>${album.title}</h5>
                   <p>${album.artist}</p>
@@ -68,7 +80,7 @@ export class HomeView {
           : '<div class="carousel-item active"><p>No albums available</p></div>';
       }
 
-      // Render playlists with fallback for undefined songIds
+      // Render playlists
       this.renderPlaylist(this.recentlyPlayed, state.recentlyPlayed || [], state.songs, 'Recently Played');
       this.renderPlaylist(this.freshPicks, state.freshPicks || [], state.songs, 'Fresh Picks');
 
@@ -81,17 +93,14 @@ export class HomeView {
                 .filter((song) => song)
             : [];
         console.log('Favourites rendering, songs:', favouriteSongs, 'total count:', state.favourites?.length || 0);
-        const collageSrc =
-          state.favourites?.length > 0
-            ? await generateCollage(favouriteSongs)
-            : 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+        const collageHtml = generateCollage(favouriteSongs, 'small');
         this.favourites.innerHTML =
           favouriteSongs.length > 0
             ? favouriteSongs
                 .map(
                   (song) => `
               <div class="playlist-item" data-song-id="${song.id}">
-                <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
+                <img src="${song.thumbnail || '/images/placeholder.png'}" alt="${song.title}" onerror="this.src='/images/placeholder.png'">
                 <div class="track-title">${song.title}</div>
                 <div class="track-artist">${song.artist}</div>
               </div>
@@ -101,7 +110,7 @@ export class HomeView {
               (state.favourites.length > 4
                 ? `
             <div class="cover-container" data-view="favourites-view">
-              <img src="${collageSrc || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="Favourites Collage">
+              ${collageHtml}
               <div class="overlay-label">View All</div>
             </div>
           `
@@ -115,10 +124,10 @@ export class HomeView {
             ? await Promise.all(
                 Object.entries(state.playlists).map(async ([name, songIds]) => {
                   const tracks = songIds.map((id) => state.songs.find((s) => s.id === id)).filter((s) => s);
-                  const collageSrc = await generateCollage(tracks);
+                  const collageHtml = generateCollage(tracks, 'small');
                   return `
               <div class="playlist-item" data-playlist-name="${name}">
-                <img src="${collageSrc}" alt="${name}">
+                ${collageHtml}
                 <div class="track-title">${name}</div>
                 <div class="track-artist">${tracks.length} songs</div>
               </div>
@@ -135,7 +144,7 @@ export class HomeView {
                 .map(
                   (album) => `
               <div class="album-item" data-album-id="${album.id}">
-                <img src="${album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${album.title}" class="album-thumbnail">
+                <img src="${album.cover || '/images/placeholder.png'}" alt="${album.title}" class="album-thumbnail" onerror="this.src='/images/placeholder.png'">
                 <div class="album-details">
                   <div class="album-title">${album.title}</div>
                   <div class="album-artist">${album.artist}</div>
@@ -157,7 +166,6 @@ export class HomeView {
       console.warn(`Container for ${sectionName} not found`);
       return;
     }
-    // Ensure songIds is an array, default to empty array if undefined
     const validSongIds = Array.isArray(songIds) ? songIds : [];
     console.log(`Rendering ${sectionName}, songIds:`, validSongIds, 'songs:', songs);
 
@@ -168,17 +176,14 @@ export class HomeView {
             .map((id) => songs.find((song) => song.id === id))
             .filter((song) => song)
         : [];
-    const collageSrc =
-      validSongIds.length > 0
-        ? await generateCollage(playlistSongs)
-        : 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+    const collageHtml = generateCollage(playlistSongs, 'small');
     container.innerHTML =
       playlistSongs.length > 0
         ? playlistSongs
             .map(
               (song) => `
           <div class="playlist-item" data-song-id="${song.id}">
-            <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
+            <img src="${song.thumbnail || '/images/placeholder.png'}" alt="${song.title}" onerror="this.src='/images/placeholder.png'">
             <div class="track-title">${song.title}</div>
             <div class="track-artist">${song.artist}</div>
           </div>
@@ -188,7 +193,7 @@ export class HomeView {
           (validSongIds.length > 4
             ? `
           <div class="cover-container" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">
-            <img src="${collageSrc}" alt="${sectionName} Collage">
+            ${collageHtml}
             <div class="overlay-label">View All</div>
           </div>
         `
