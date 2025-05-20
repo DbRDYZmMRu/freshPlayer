@@ -1,5 +1,6 @@
 // js/homeView.js
 import { TracklistView } from './tracklistView.js';
+import { RecentlyPlayedView } from './recentlyPlayedView.js';
 import { FavouritesView } from './favouritesView.js';
 import { generateCollage } from './utils.js';
 
@@ -16,7 +17,7 @@ export class HomeView {
     this.albumsSection = document.getElementById('albums-section');
     this.carousel = null;
   }
-  
+
   init() {
     if (!this.homeView) {
       console.error('home-view element not found');
@@ -29,7 +30,7 @@ export class HomeView {
           interval: 5000,
           ride: 'carousel',
           pause: false,
-          touch: true
+          touch: true,
         });
         console.log('Carousel initialized');
       } catch (error) {
@@ -37,21 +38,23 @@ export class HomeView {
       }
     }
     this.render();
-    this.songState.subscribe(state => {
-      console.log('HomeView: State updated, favourites:', state.favourites, 'length:', state.favourites.length);
+    this.songState.subscribe((state) => {
+      console.log('HomeView: State updated, favourites:', state.favourites, 'length:', state.favourites?.length || 0);
       this.render(state);
     });
     this.bindEvents();
   }
-  
+
   async render(state = this.songState.getState()) {
     try {
-      console.log('Rendering HomeView, favourites count:', state.favourites.length);
+      console.log('Rendering HomeView, state:', state);
       if (!this.carouselInner) {
         console.error('carousel-inner element not found');
       } else {
-        this.carouselInner.innerHTML = Array.isArray(state.albums) && state.albums.length > 0 ?
-          state.albums.map((album, index) => `
+        this.carouselInner.innerHTML = Array.isArray(state.albums) && state.albums.length > 0
+          ? state.albums
+              .map(
+                (album, index) => `
               <div class="carousel-item ${index === 0 ? 'active' : ''}" data-album-id="${album.id}">
                 <img src="${album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" class="d-block w-100" alt="${album.title}">
                 <div class="carousel-caption d-block">
@@ -59,56 +62,78 @@ export class HomeView {
                   <p>${album.artist}</p>
                 </div>
               </div>
-            `).join('') :
-          '<div class="carousel-item active"><p>No albums available</p></div>';
+            `
+              )
+              .join('')
+          : '<div class="carousel-item active"><p>No albums available</p></div>';
       }
-      
-      this.renderPlaylist(this.recentlyPlayed, state.recentlyPlayed, state.songs, 'Recently Played');
-      this.renderPlaylist(this.freshPicks, state.freshPicks, state.songs, 'Fresh Picks');
-      
-      // Render Favourites
+
+      // Render playlists with fallback for undefined songIds
+      this.renderPlaylist(this.recentlyPlayed, state.recentlyPlayed || [], state.songs, 'Recently Played');
+      this.renderPlaylist(this.freshPicks, state.freshPicks || [], state.songs, 'Fresh Picks');
+
       if (this.favourites) {
-        const favouriteSongs = Array.isArray(state.favourites) && state.favourites.length > 0 ?
-          state.favourites
-            .slice(0, 4) // Limit to 4 items
-            .map(id => state.songs.find(song => song.id === id))
-            .filter(song => song)
-          : [];
-        console.log('Favourites rendering, songs:', favouriteSongs, 'total count:', state.favourites.length);
-        this.favourites.innerHTML = favouriteSongs.length > 0 ?
-          favouriteSongs.map(song => `
+        const favouriteSongs =
+          Array.isArray(state.favourites) && state.favourites.length > 0
+            ? state.favourites
+                .slice(0, 4)
+                .map((id) => state.songs.find((song) => song.id === id))
+                .filter((song) => song)
+            : [];
+        console.log('Favourites rendering, songs:', favouriteSongs, 'total count:', state.favourites?.length || 0);
+        const collageSrc =
+          state.favourites?.length > 0
+            ? await generateCollage(favouriteSongs)
+            : 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+        this.favourites.innerHTML =
+          favouriteSongs.length > 0
+            ? favouriteSongs
+                .map(
+                  (song) => `
               <div class="playlist-item" data-song-id="${song.id}">
                 <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
                 <div class="track-title">${song.title}</div>
                 <div class="track-artist">${song.artist}</div>
               </div>
-            `).join('') +
-          (state.favourites.length > 4 ? `<a href="#" class="view-all-link ms-2" data-view="favourites-view">View All</a>` : '') :
-          '<p>No songs in Favourites</p>';
+            `
+                )
+                .join('') +
+              (state.favourites.length > 4
+                ? `
+            <div class="cover-container" data-view="favourites-view">
+              <img src="${collageSrc || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="Favourites Collage">
+              <div class="overlay-label">View All</div>
+            </div>
+          `
+                : '')
+            : '<p>No songs in Favourites</p>';
       }
-      
-      // Render Playlists
+
       if (this.playlistsContainer) {
-        this.playlistsContainer.innerHTML = Array.isArray(Object.keys(state.playlists)) && Object.keys(state.playlists).length > 0 ?
-          await Promise.all(Object.entries(state.playlists).map(async ([name, songIds]) => {
-            const tracks = songIds
-              .map(id => state.songs.find(s => s.id === id))
-              .filter(s => s);
-            const collageSrc = await generateCollage(tracks);
-            return `
+        this.playlistsContainer.innerHTML =
+          Array.isArray(Object.keys(state.playlists)) && Object.keys(state.playlists).length > 0
+            ? await Promise.all(
+                Object.entries(state.playlists).map(async ([name, songIds]) => {
+                  const tracks = songIds.map((id) => state.songs.find((s) => s.id === id)).filter((s) => s);
+                  const collageSrc = await generateCollage(tracks);
+                  return `
               <div class="playlist-item" data-playlist-name="${name}">
                 <img src="${collageSrc}" alt="${name}">
                 <div class="track-title">${name}</div>
                 <div class="track-artist">${tracks.length} songs</div>
               </div>
             `;
-          })).then(html => html.join('')) :
-          '<p>No playlists available</p>';
+                })
+              ).then((html) => html.join(''))
+            : '<p>No playlists available</p>';
       }
-      
+
       if (this.albumsSection) {
-        this.albumsSection.innerHTML = Array.isArray(state.albums) && state.albums.length > 0 ?
-          state.albums.map(album => `
+        this.albumsSection.innerHTML =
+          Array.isArray(state.albums) && state.albums.length > 0
+            ? state.albums
+                .map(
+                  (album) => `
               <div class="album-item" data-album-id="${album.id}">
                 <img src="${album.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${album.title}" class="album-thumbnail">
                 <div class="album-details">
@@ -116,39 +141,65 @@ export class HomeView {
                   <div class="album-artist">${album.artist}</div>
                 </div>
               </div>
-            `).join('') :
-          '<p>No albums available</p>';
+            `
+                )
+                .join('')
+            : '<p>No albums available</p>';
       }
     } catch (error) {
       console.error('Error in HomeView.render:', error);
+      this.homeView.innerHTML = '<p>Error loading home view. Please try again.</p>';
     }
   }
-  
-  renderPlaylist(container, songIds, songs, sectionName) {
+
+  async renderPlaylist(container, songIds, songs, sectionName) {
     if (!container) {
       console.warn(`Container for ${sectionName} not found`);
       return;
     }
-    container.innerHTML = Array.isArray(songIds) && songIds.length > 0 ?
-      songIds
-        .slice(0, 4) // Limit to 4 items
-        .map(id => songs.find(song => song.id === id))
-        .filter(song => song)
-        .map(song => `
-            <div class="playlist-item" data-song-id="${song.id}">
-              <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
-              <div class="track-title">${song.title}</div>
-              <div class="track-artist">${song.artist}</div>
-            </div>
-          `).join('') +
-        (songIds.length > 4 && sectionName !== 'Favourites' ? `<a href="#" class="view-all-link ms-2" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">View All</a>` : '') :
-      `<p>No songs in ${sectionName}</p>`;
+    // Ensure songIds is an array, default to empty array if undefined
+    const validSongIds = Array.isArray(songIds) ? songIds : [];
+    console.log(`Rendering ${sectionName}, songIds:`, validSongIds, 'songs:', songs);
+
+    const playlistSongs =
+      validSongIds.length > 0
+        ? validSongIds
+            .slice(0, 4)
+            .map((id) => songs.find((song) => song.id === id))
+            .filter((song) => song)
+        : [];
+    const collageSrc =
+      validSongIds.length > 0
+        ? await generateCollage(playlistSongs)
+        : 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
+    container.innerHTML =
+      playlistSongs.length > 0
+        ? playlistSongs
+            .map(
+              (song) => `
+          <div class="playlist-item" data-song-id="${song.id}">
+            <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
+            <div class="track-title">${song.title}</div>
+            <div class="track-artist">${song.artist}</div>
+          </div>
+        `
+            )
+            .join('') +
+          (validSongIds.length > 4
+            ? `
+          <div class="cover-container" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">
+            <img src="${collageSrc}" alt="${sectionName} Collage">
+            <div class="overlay-label">View All</div>
+          </div>
+        `
+            : '')
+        : `<p>No songs in ${sectionName}</p>`;
   }
-  
+
   bindEvents() {
     try {
       if (this.carouselInner) {
-        this.carouselInner.addEventListener('click', e => {
+        this.carouselInner.addEventListener('click', (e) => {
           const item = e.target.closest('.carousel-item');
           if (item) {
             const albumId = item.dataset.albumId;
@@ -160,16 +211,16 @@ export class HomeView {
           }
         });
       }
-      
+
       const sections = [this.recentlyPlayed, this.favourites, this.freshPicks].filter(Boolean);
-      sections.forEach(section => {
-        section.addEventListener('click', e => {
+      sections.forEach((section) => {
+        section.addEventListener('click', (e) => {
           const item = e.target.closest('.playlist-item');
-          const viewAll = e.target.closest('.view-all-link');
-          if (viewAll) {
+          const coverContainer = e.target.closest('.cover-container');
+          if (coverContainer) {
             e.preventDefault();
-            const viewId = viewAll.dataset.view;
-            console.log('View All clicked for:', viewId);
+            const viewId = coverContainer.dataset.view;
+            console.log('Cover clicked for:', viewId);
             if (viewId === 'favourites-view') {
               this.app.views['favourites-view'] = new FavouritesView(
                 this.songState,
@@ -181,16 +232,20 @@ export class HomeView {
               );
               this.app.views['favourites-view'].init('home-view');
               this.songState.pushView('favourites-view');
-              this.app.showView('favourites-view'); // Added to show view
+              this.app.showView('favourites-view');
             } else if (viewId === 'recently-played-view') {
-              this.app.views['tracklist-view'] = new TracklistView(
+              if (!document.getElementById('recently-played-view')) {
+                console.error('recently-played-view element not found');
+                return;
+              }
+              this.app.views['recently-played-view'] = new RecentlyPlayedView(
                 this.songState,
                 this.applyGradient.bind(this),
                 this.app
               );
-              this.app.views['tracklist-view'].init('home-view');
-              this.songState.pushView('tracklist-view');
-              this.app.showView('tracklist-view'); // Added to show view
+              this.app.views['recently-played-view'].init('home-view');
+              this.songState.pushView('recently-played-view');
+              this.app.showView('recently-played-view');
             }
           } else if (item) {
             const songId = item.dataset.songId;
@@ -204,9 +259,9 @@ export class HomeView {
           }
         });
       });
-      
+
       if (this.albumsSection) {
-        this.albumsSection.addEventListener('click', e => {
+        this.albumsSection.addEventListener('click', (e) => {
           const item = e.target.closest('.album-item');
           if (item) {
             const albumId = item.dataset.albumId;
@@ -218,7 +273,7 @@ export class HomeView {
           }
         });
       }
-      
+
       const createPlaylistBtn = document.getElementById('create-playlist-btn');
       if (createPlaylistBtn) {
         createPlaylistBtn.addEventListener('click', () => {
@@ -230,7 +285,7 @@ export class HomeView {
             }
             const modal = new bootstrap.Modal(modalElement, {
               backdrop: true,
-              keyboard: true
+              keyboard: true,
             });
             document.getElementById('playlist-modal-title').textContent = 'Create Playlist';
             document.getElementById('playlist-name-input').value = '';
@@ -245,7 +300,7 @@ export class HomeView {
       console.error('Error in HomeView.bindEvents:', error);
     }
   }
-  
+
   applyGradient(image) {
     const colorThief = new ColorThief();
     try {
@@ -261,18 +316,22 @@ export class HomeView {
       document.body.style.background = 'linear-gradient(to bottom, #d4a5d9, #6b48ff)';
     }
   }
-  
+
   adjustSaturation(rgb, saturationIncrease = 20) {
     const [h, s, l] = this.rgbToHsl(rgb[0], rgb[1], rgb[2]);
     const newSaturation = Math.min(100, s + saturationIncrease);
     return this.hslToRgb(h, newSaturation, l);
   }
-  
+
   rgbToHsl(r, g, b) {
-    r /= 255, g /= 255, b /= 255;
+    r /= 255;
+    g /= 255;
+    b /= 255;
     const max = Math.max(r, g, b),
       min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
+    let h,
+      s,
+      l = (max + min) / 2;
     if (max === min) {
       h = s = 0;
     } else {
@@ -293,9 +352,11 @@ export class HomeView {
     }
     return [h * 360, s * 100, l * 100];
   }
-  
+
   hslToRgb(h, s, l) {
-    h /= 360, s /= 100, l /= 100;
+    h /= 360;
+    s /= 100;
+    l /= 100;
     let r, g, b;
     if (s === 0) {
       r = g = b = l;
@@ -316,11 +377,11 @@ export class HomeView {
     }
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
-  
+
   rgbToCssColor(rgb) {
     return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
   }
-  
+
   show() {
     this.homeView.classList.remove('hidden');
     document.getElementById('playback-overlay').style.display = 'flex';
@@ -329,7 +390,7 @@ export class HomeView {
       console.log('Carousel resumed');
     }
   }
-  
+
   hide() {
     this.homeView.classList.add('hidden');
     document.getElementById('playback-overlay').style.display = 'none';

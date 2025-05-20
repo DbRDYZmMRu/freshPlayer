@@ -90,6 +90,27 @@
     <div class="tracklist" id="playlist-tracklist"></div>
   </div>
   
+<!-- Recently Played View -->
+<div class="music-player hidden" id="recently-played-view">
+  <nav class="navbar fixed-top" id="recently-played-sticky-navbar">
+    <div class="d-flex align-items-center">
+      <img id="recently-played-thumbnail-art" alt="Recently Played Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
+      <span class="album-name" id="recently-played-navbar-name">Recently Played</span>
+    </div>
+    <button class="back-btn" id="recently-played-back-btn">←</button>
+  </nav>
+  <div class="album-header" id="recently-played-header">
+    <div class="album-art-container mt-5">
+      <img id="recently-played-main-art" class="album-art" alt="Recently Played Cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
+    </div>
+    <div class="album-info">
+      <div class="album-name fs-4 fw-bold" id="recently-played-title">Recently Played</div>
+      <div class="release-year fs-5 opacity-75" id="recently-played-song-count"></div>
+    </div>
+  </div>
+  <div class="tracklist" id="recently-played-tracklist"></div>
+</div>  
+  
   <!-- Favourites View -->
   <div class="music-player hidden" id="favourites-view">
     <nav class="navbar fixed-top" id="favourites-sticky-navbar">
@@ -110,6 +131,7 @@
     </div>
     <div class="tracklist" id="favourites-tracklist"></div>
   </div>
+  
   
   
   <!-- Playback Footer -->
@@ -249,8 +271,10 @@
   
   <audio id="audio-player" preload="metadata"></audio>
   
+  
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.4.0/color-thief.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 

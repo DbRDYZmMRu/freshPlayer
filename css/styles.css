@@ -1121,16 +1121,74 @@ body {
   font-size: 16px;
 }
 
-.view-all-link {
-  color: #6b48ff;
-  font-size: 14px;
-  text-decoration: none;
-  align-self: center;
+
+/* recently-played View */
+#recently-played-view {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 60px 15px 80px;
+  display: block;
 }
 
-.view-all-link:hover {
-  text-decoration: underline;
+#recently-played-view.hidden {
+  display: none;
 }
+
+#recently-played-sticky-navbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+#recently-played-sticky-navbar.sticky {
+  display: flex;
+  align-items: center;
+  opacity: 1;
+}
+
+#recently-played-sticky-navbar .thumbnail-art {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 10px;
+  opacity: 1;
+  border: 1px solid #fff; /* Remove after debugging */
+}
+
+#recently-played-sticky-navbar .album-name {
+  color: #fff;
+  font-size: 16px;
+}
+
+
+
+
+
+
+
+
+.cover-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.cover-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 
 /* Update existing back-btn selector */
 .back-btn, #tracklist-back-btn, #playlist-back-btn, #favourites-back-btn {
@@ -1155,7 +1213,107 @@ body {
 
 /* Update responsive media query */
 @media (max-width: 360px) {
-  #tracklist-view, #playlist-view, #favourites-view {
+  #tracklist-view, #playlist-view, #favourites-view #recently-played {
     padding: 60px 10px 80px;
   }
+}
+
+
+/* css/styles.css (append to existing file) */
+
+/* Update cover-container styles */
+.cover-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cover-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.overlay-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 1; /* Always visible, no hover required */
+}
+
+/* css/styles.css (append to existing file) */
+
+/* Ensure consistent sizing for Recently Played collage */
+.album-art-container {
+  width: 120px;
+  height: 120px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Prevent distortion */
+  border-radius: 8px;
+}
+
+/* Fix navbar thumbnail */
+#recently-played-thumbnail-art {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Ensure tracklist images are consistent */
+.tracklist-item img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Ensure HomeView collages are consistent */
+.cover-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cover-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.overlay-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 1;
 }

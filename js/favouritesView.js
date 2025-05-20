@@ -17,13 +17,10 @@ export class FavouritesView {
     this.tracklist = this.container.querySelector('.tracklist') || document.getElementById('favourites-tracklist');
     this.backBtn = document.getElementById('favourites-back-btn');
     this.playbackOverlay = document.getElementById('playback-overlay');
-    this.offcanvasElement = document.getElementById('trackMenu');
-    this.offcanvas = new bootstrap.Offcanvas(this.offcanvasElement);
-    this.offcanvasTitle = this.offcanvasElement.querySelector('.offcanvas-title');
     this.title = title;
     this.tracksKey = tracksKey;
     this.applyGradientCallback = applyGradientCallback;
-    this.collageCache = null; // Cache for collage data URL
+    this.collageCache = null;
   }
   
   init(backTarget = 'home-view') {
@@ -53,7 +50,6 @@ export class FavouritesView {
     this.subtitleElement.textContent = `${tracks.length} songs`;
     this.navbarTitle.textContent = this.title;
     
-    // Generate or use cached collage
     const collageSrc = await this.generateCollage(tracks);
     this.collageCache = collageSrc;
     
@@ -77,8 +73,7 @@ export class FavouritesView {
               <div class="track-duration">${song.duration}</div>
             </div>
           </div>
-          <button class="remove-song btn p-0" data-song-id="${song.id}">🗑️</button>
-          <span class="menu-icon" data-bs-toggle="offcanvas" data-bs-target="#trackMenu">⋮</span>
+          <button class="remove-song btn p-0" data-song-id="${song.id}" title="Remove from Favourites">🗑️</button>
         </div>
       `).join('') : '<p>No songs in Favourites</p>';
   }
@@ -122,18 +117,19 @@ export class FavouritesView {
         e.preventDefault();
         const songId = e.dataTransfer.getData('text/plain');
         const newOrder = Array.from(this.tracklist.querySelectorAll('.tracklist-item')).map(item => item.dataset.songId);
-        this.songState.reorderFavourites(newOrder); // Assumes songState has reorderFavourites
+        this.songState.reorderFavourites(newOrder);
       });
       
       this.tracklist.addEventListener('click', e => {
         const removeBtn = e.target.closest('.remove-song');
         if (removeBtn) {
           const songId = removeBtn.dataset.songId;
-          this.songState.removeFromFavourites(songId); // Assumes songState has removeFromFavourites
+          this.songState.toggleFavourite(songId); // Use toggleFavourite instead
+          console.log(`Removed song ${songId} from Favourites`);
           return;
         }
         const item = e.target.closest('.tracklist-item');
-        if (item && !e.target.classList.contains('menu-icon')) {
+        if (item) {
           document.querySelectorAll('.tracklist-item').forEach(i => i.classList.remove('active'));
           item.classList.add('active');
           const songId = item.dataset.songId;
@@ -149,21 +145,6 @@ export class FavouritesView {
         }
       });
     }
-    
-    document.querySelectorAll('.menu-icon').forEach(icon => {
-      if (icon._handler) {
-        icon.removeEventListener('click', icon._handler);
-      }
-      icon._handler = e => {
-        e.stopPropagation();
-        const trackItem = icon.closest('.tracklist-item');
-        this.offcanvasTitle.textContent = trackItem.dataset.title;
-        this.offcanvas.dataset.songId = trackItem.dataset.songId;
-        this.offcanvas.dataset.playlistName = this.tracksKey;
-        this.offcanvas.show();
-      };
-      icon.addEventListener('click', icon._handler);
-    });
     
     window.addEventListener('scroll', this.debounce(this.updateNavbar.bind(this), 150));
     window.addEventListener('resize', this.updateNavbar.bind(this));
@@ -213,7 +194,7 @@ export class FavouritesView {
       this.albumArtContainer.classList.add('sticky');
       if (this.thumbnailArt) {
         this.thumbnailArt.style.display = 'none';
-        this.thumbnailArt.offsetHeight; // Trigger reflow
+        this.thumbnailArt.offsetHeight;
         this.thumbnailArt.style.display = 'block';
       }
     } else {
