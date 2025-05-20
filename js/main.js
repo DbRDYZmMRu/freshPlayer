@@ -17,25 +17,48 @@ class App {
       'queue-player': new QueueView(this.songState)
     };
     this.currentView = 'home-view';
+    this.isNavigating = false;
   }
   
   init() {
-    Object.values(this.views).forEach(view => view.init());
+    console.log('App.init called, views:', Object.keys(this.views));
+    Object.values(this.views).forEach(view => {
+      console.log(`Initializing view: ${view.constructor.name}`);
+      view.init(this.views['home-view']?.applyGradient?.bind(this.views['home-view']));
+    });
     this.views['home-view'].show();
     this.songState.subscribe(state => this.handleNavigation(state));
     this.bindGlobalEvents();
   }
   
   handleNavigation(state) {
-    const currentViewId = state.navigationHistory[state.navigationHistory.length - 1];
-    if (currentViewId !== this.currentView) {
+    const currentViewId = state.navigationHistory[state.navigationHistory.length - 1] || 'home-view';
+    console.log('handleNavigation called, currentViewId:', currentViewId, 'previous currentView:', this.currentView);
+    if (!this.views[currentViewId]) {
+      console.warn(`View ${currentViewId} not found, defaulting to home-view`);
+      this.songState.pushView('home-view');
+      return;
+    }
+    console.log(`Processing view: ${currentViewId}`);
+    this.views[this.currentView]?.hide();
+    this.views[currentViewId].show();
+    this.currentView = currentViewId;
+    this.isNavigating = false;
+    const backBtn = document.getElementById('global-back-btn');
+    if (backBtn) {
+      backBtn.classList.toggle('d-none', state.navigationHistory.length <= 1);
+    }
+  }
+  
+  showOverlayView(viewId) {
+    console.log(`showOverlayView called for: ${viewId}, currentView: ${this.currentView}`);
+    if (this.views[viewId]) {
       this.views[this.currentView]?.hide();
-      this.views[currentViewId]?.show();
-      this.currentView = currentViewId;
-      const backBtn = document.getElementById('global-back-btn');
-      if (backBtn) {
-        backBtn.classList.toggle('d-none', state.navigationHistory.length <= 1);
-      }
+      this.views[viewId].show();
+      this.currentView = viewId;
+      console.log(`Successfully showed overlay view: ${viewId}`);
+    } else {
+      console.error(`Overlay view ${viewId} not found in views:`, Object.keys(this.views));
     }
   }
   
@@ -56,14 +79,16 @@ class App {
       
       playbackOverlay.addEventListener('click', e => {
         if (e.target.closest('.playback-control') || this.songState.getState().currentSong.title === 'Select a track') return;
-        this.songState.pushView('detailed-player');
-        this.views['home-view'].hide();
-        this.views['tracklist-view'].hide();
-        this.views['detailed-player'].show();
-        playbackOverlay.style.display = 'none';
-        const img = document.getElementById('detailed-album-art');
-        if (img && this.views['home-view'].applyGradient) {
-          img.onload = () => this.views['home-view'].applyGradient(img);
+        if (this.isNavigating) {
+          console.log('Navigation in progress, skipping playback overlay click');
+          return;
+        }
+        this.isNavigating = true;
+        console.log('Playback overlay clicked, current history:', this.songState.getState().navigationHistory, 'currentView:', this.currentView);
+        if (this.songState.getState().navigationHistory[this.songState.getState().navigationHistory.length - 1] !== 'detailed-player') {
+          this.songState.pushView('detailed-player');
+        } else {
+          console.log('Already in detailed-player, skipping push');
         }
       });
       
@@ -78,12 +103,14 @@ class App {
     const globalBackBtn = document.getElementById('global-back-btn');
     if (globalBackBtn) {
       globalBackBtn.addEventListener('click', () => {
-        const previousView = this.songState.popView();
-        if (previousView) {
-          this.views[this.currentView].hide();
-          this.views[previousView].show();
-          this.currentView = previousView;
+        if (this.isNavigating) {
+          console.log('Navigation in progress, skipping global back click');
+          return;
         }
+        this.isNavigating = true;
+        console.log('Global back button clicked, current history:', this.songState.getState().navigationHistory);
+        const previousView = this.songState.popView();
+        console.log('Global back navigating to:', previousView);
       });
     }
     
@@ -194,4 +221,10 @@ class App {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => new App().init());
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded, creating App instance');
+  const app = new App();
+  document.querySelector('body').__app = app;
+  console.log('App instance set on body.__app');
+  app.init();
+});

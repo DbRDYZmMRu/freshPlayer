@@ -29,6 +29,11 @@ export class TracklistView {
   }
   
   init(backTarget = 'home-view') {
+    if (!this.backBtn) {
+      console.error('tracklist-back-btn element not found in DOM');
+    } else {
+      console.log('tracklist-back-btn found, binding event');
+    }
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
     this.bindEvents(backTarget);
@@ -141,9 +146,15 @@ export class TracklistView {
     }
     
     if (this.backBtn) {
-      this.backBtn.addEventListener('click', () => {
-        this.songState.popView();
-      });
+      this.backBtn.removeEventListener('click', this.handleBackClick);
+      this.handleBackClick = () => {
+        console.log('Tracklist back button clicked, current history:', this.songState.getState().navigationHistory);
+        const previousView = this.songState.popView();
+        console.log('Navigating to previous view:', previousView);
+      };
+      this.backBtn.addEventListener('click', this.handleBackClick);
+    } else {
+      console.warn('tracklist-back-btn not found, cannot bind event');
     }
     
     document.querySelectorAll('.menu-icon').forEach(icon => {

@@ -21,12 +21,16 @@ export class LyricsView {
     this.lyricsForwardBtn = document.getElementById('lyrics-forward-btn');
     this.debounceTimeout = null;
     this.isStaticLyrics = false;
+    this.app = document.querySelector('body').__app;
   }
   
   init(applyGradient) {
     if (!this.lyricsPlayer) {
       console.error('lyrics-player element not found');
       return;
+    }
+    if (!this.app) {
+      console.error('App instance not found for overlay navigation');
     }
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
@@ -253,10 +257,10 @@ export class LyricsView {
         this.lyricsForwardBtn.addEventListener('click', this.lyricsForwardBtn._handler);
       }
       
-      if (this.lyricsToggleBtn) {
+      if (this.lyricsToggleBtn && this.app) {
         this.lyricsToggleBtn._handler = () => {
-          console.log('Toggle to detailed-player clicked');
-          this.songState.pushView('detailed-player');
+          console.log('Lyrics toggle button clicked, returning to detailed-player');
+          this.app.showOverlayView('detailed-player');
         };
         this.lyricsToggleBtn.addEventListener('click', this.lyricsToggleBtn._handler);
       }

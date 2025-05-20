@@ -6,12 +6,16 @@ export class QueueView {
     this.toggleBtn = document.getElementById('queue-toggle-btn');
     this.clearBtn = document.getElementById('queue-clear-btn');
     this.tracklist = document.querySelector('#queue-player .tracklist');
+    this.app = document.querySelector('body').__app;
   }
   
   init() {
     if (!this.queuePlayer) {
       console.error('queue-player element not found');
       return;
+    }
+    if (!this.app) {
+      console.error('App instance not found for overlay navigation');
     }
     this.render();
     this.bindEvents();
@@ -44,27 +48,33 @@ export class QueueView {
   
   bindEvents() {
     try {
-      if (this.toggleBtn) {
-        this.toggleBtn.addEventListener('click', () => {
-          this.songState.pushView('detailed-player');
-        });
+      if (this.toggleBtn && this.app) {
+        this.toggleBtn._handler = () => {
+          console.log('Queue toggle button clicked, returning to detailed-player');
+          this.app.showOverlayView('detailed-player');
+        };
+        this.toggleBtn.addEventListener('click', this.toggleBtn._handler);
       }
       
       if (this.clearBtn) {
-        this.clearBtn.addEventListener('click', () => {
+        this.clearBtn._handler = () => {
+          console.log('Clear queue button clicked');
           this.songState.clearQueue();
-        });
+        };
+        this.clearBtn.addEventListener('click', this.clearBtn._handler);
       }
       
-      this.tracklist.addEventListener('click', (e) => {
+      this.tracklist._handler = (e) => {
         const removeBtn = e.target.closest('.remove-btn');
         if (removeBtn) {
           const songId = removeBtn.closest('.track-item').dataset.songId;
           if (songId) {
+            console.log(`Removing song ${songId} from queue`);
             this.songState.removeFromQueue(songId);
           }
         }
-      });
+      };
+      this.tracklist.addEventListener('click', this.tracklist._handler);
     } catch (error) {
       console.error('Error in QueueView.bindEvents:', error);
     }

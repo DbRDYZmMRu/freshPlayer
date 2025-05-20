@@ -1016,6 +1016,31 @@ body {
 
 
 
+#tracklist-back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background-color: #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
 
+#tracklist-back-btn:hover {
+  background-color: #f0f0f0;
+}
+
+#tracklist-back-btn::before {
+  content: '←';
+  font-size: 20px;
+  color: #333;
+}
 
 
