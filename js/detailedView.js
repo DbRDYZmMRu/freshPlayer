@@ -1,7 +1,8 @@
 // js/detailedView.js
 export class DetailedView {
-  constructor(songState) {
+  constructor(songState, app) {
     this.songState = songState;
+    this.app = app;
     this.detailedPlayer = document.getElementById('detailed-player');
     this.toggleBtn = document.getElementById('detailed-toggle-btn');
     this.albumArt = document.getElementById('detailed-album-art');
@@ -23,7 +24,6 @@ export class DetailedView {
     this.progressDot = document.querySelector('#detailed-player .progress-dot');
     this.currentTime = document.getElementById('detailed-current-time');
     this.totalTime = document.getElementById('detailed-total-time');
-    this.app = document.querySelector('body').__app;
   }
   
   init() {
@@ -42,7 +42,7 @@ export class DetailedView {
       console.error('queue-btn element not found in DOM');
     }
     if (!this.app) {
-      console.error('App instance not found for overlay navigation');
+      console.error('App instance not provided to DetailedView');
     }
     this.render();
     this.bindEvents();

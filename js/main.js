@@ -10,11 +10,11 @@ class App {
   constructor() {
     this.songState = new SongState();
     this.views = {
-      'home-view': new HomeView(this.songState),
-      'tracklist-view': new TracklistView(this.songState, 'tracklist-view', 'Album', 'tracks', 'album', this.views?.['home-view']?.applyGradient?.bind(this.views['home-view'])),
-      'detailed-player': new DetailedView(this.songState),
-      'lyrics-player': new LyricsView(this.songState),
-      'queue-player': new QueueView(this.songState)
+      'home-view': new HomeView(this.songState, this),
+      'tracklist-view': new TracklistView(this.songState, 'tracklist-view', 'Album', 'tracks', 'album', this.views?.['home-view']?.applyGradient?.bind(this.views['home-view']), this),
+      'detailed-player': new DetailedView(this.songState, this),
+      'lyrics-player': new LyricsView(this.songState, this),
+      'queue-player': new QueueView(this.songState, this)
     };
     this.currentView = 'home-view';
     this.isNavigating = false;
@@ -33,10 +33,16 @@ class App {
   
   handleNavigation(state) {
     const currentViewId = state.navigationHistory[state.navigationHistory.length - 1] || 'home-view';
-    console.log('handleNavigation called, currentViewId:', currentViewId, 'previous currentView:', this.currentView);
+    console.log('handleNavigation called, currentViewId:', currentViewId, 'previous currentView:', this.currentView, 'isPlaying:', state.currentSong.isPlaying);
     if (!this.views[currentViewId]) {
       console.warn(`View ${currentViewId} not found, defaulting to home-view`);
       this.songState.pushView('home-view');
+      return;
+    }
+    // Skip history-based navigation if in overlay view
+    const overlayViews = ['lyrics-player', 'queue-player'];
+    if (overlayViews.includes(this.currentView)) {
+      console.log(`In overlay view ${this.currentView}, skipping history navigation to ${currentViewId}`);
       return;
     }
     console.log(`Processing view: ${currentViewId}`);
@@ -51,7 +57,7 @@ class App {
   }
   
   showOverlayView(viewId) {
-    console.log(`showOverlayView called for: ${viewId}, currentView: ${this.currentView}`);
+    console.log(`showOverlayView called for: ${viewId}, currentView: ${this.currentView}, available views:`, Object.keys(this.views));
     if (this.views[viewId]) {
       this.views[this.currentView]?.hide();
       this.views[viewId].show();
@@ -71,6 +77,7 @@ class App {
       const playbackControl = document.getElementById('playback-control');
       
       this.songState.subscribe(state => {
+        console.log('Playback overlay updating, isPlaying:', state.currentSong.isPlaying, 'currentView:', this.currentView);
         playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
         playbackTitle.textContent = state.currentSong.title || 'Select a track';
         playbackAlbum.textContent = state.currentSong.album || 'Unknown';
@@ -81,6 +88,11 @@ class App {
         if (e.target.closest('.playback-control') || this.songState.getState().currentSong.title === 'Select a track') return;
         if (this.isNavigating) {
           console.log('Navigation in progress, skipping playback overlay click');
+          return;
+        }
+        const overlayViews = ['lyrics-player', 'queue-player'];
+        if (overlayViews.includes(this.currentView)) {
+          console.log(`In overlay view ${this.currentView}, skipping playback overlay navigation`);
           return;
         }
         this.isNavigating = true;
@@ -95,6 +107,7 @@ class App {
       if (playbackControl) {
         playbackControl.addEventListener('click', e => {
           e.stopPropagation();
+          console.log('Playback control clicked, toggling play');
           this.songState.togglePlay();
         });
       }

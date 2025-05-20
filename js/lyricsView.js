@@ -1,7 +1,8 @@
 // js/lyricsView.js
 export class LyricsView {
-  constructor(songState) {
+  constructor(songState, app) {
     this.songState = songState;
+    this.app = app;
     this.lyricsPlayer = document.getElementById('lyrics-player');
     this.lyricsBackground = document.getElementById('lyrics-background');
     this.lyricsSongTitle = document.getElementById('lyrics-song-title');
@@ -21,7 +22,6 @@ export class LyricsView {
     this.lyricsForwardBtn = document.getElementById('lyrics-forward-btn');
     this.debounceTimeout = null;
     this.isStaticLyrics = false;
-    this.app = document.querySelector('body').__app;
   }
   
   init(applyGradient) {
@@ -29,8 +29,12 @@ export class LyricsView {
       console.error('lyrics-player element not found');
       return;
     }
+    console.log('LyricsView.init, lyricsToggleBtn:', !!this.lyricsToggleBtn, 'app:', !!this.app);
+    if (!this.lyricsToggleBtn) {
+      console.error('lyrics-toggle-btn element not found in DOM');
+    }
     if (!this.app) {
-      console.error('App instance not found for overlay navigation');
+      console.error('App instance not provided to LyricsView');
     }
     this.updateUI(this.songState.getState());
     this.songState.subscribe(state => this.updateUI(state));
@@ -203,7 +207,7 @@ export class LyricsView {
       
       if (this.lyricsPlayBtn) {
         this.lyricsPlayBtn._handler = () => {
-          console.log('Lyrics play button clicked');
+          console.log('Lyrics play button clicked, current view:', this.app?.currentView);
           this.songState.togglePlay();
         };
         this.lyricsPlayBtn.addEventListener('click', this.lyricsPlayBtn._handler);
@@ -257,12 +261,21 @@ export class LyricsView {
         this.lyricsForwardBtn.addEventListener('click', this.lyricsForwardBtn._handler);
       }
       
-      if (this.lyricsToggleBtn && this.app) {
+      if (this.lyricsToggleBtn) {
         this.lyricsToggleBtn._handler = () => {
-          console.log('Lyrics toggle button clicked, returning to detailed-player');
-          this.app.showOverlayView('detailed-player');
+          console.log('Lyrics toggle button (🎵) clicked, current view:', this.app?.currentView);
+          if (this.app) {
+            this.app.showOverlayView('detailed-player');
+          } else {
+            console.warn('App instance not available, falling back to DOM navigation');
+            document.getElementById('lyrics-player').classList.remove('active');
+            document.getElementById('detailed-player').classList.add('active');
+            document.getElementById('playback-overlay').style.display = 'none';
+          }
         };
         this.lyricsToggleBtn.addEventListener('click', this.lyricsToggleBtn._handler);
+      } else {
+        console.error('lyrics-toggle-btn not found, cannot bind event');
       }
     } catch (error) {
       console.error('Error in LyricsView.bindEvents:', error);
@@ -270,11 +283,13 @@ export class LyricsView {
   }
   
   show() {
+    console.log('LyricsView.show called');
     this.lyricsPlayer.classList.add('active');
     document.getElementById('playback-overlay').style.display = 'none';
   }
   
   hide() {
+    console.log('LyricsView.hide called');
     this.lyricsPlayer.classList.remove('active');
   }
 }

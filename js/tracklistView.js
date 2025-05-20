@@ -1,7 +1,8 @@
 // js/tracklistView.js
 export class TracklistView {
-  constructor(songState, containerId, title, tracksKey, type = 'album', applyGradientCallback = null) {
+  constructor(songState, containerId, title, tracksKey, type = 'album', applyGradientCallback = null, app) {
     this.songState = songState;
+    this.app = app;
     this.container = document.getElementById(containerId);
     this.navbar = document.getElementById(`${containerId}-navbar`) || document.getElementById('sticky-navbar');
     this.tracklist = this.container.querySelector('.tracklist') || document.getElementById('tracklist');

@@ -3,8 +3,9 @@ import { TracklistView } from './tracklistView.js';
 import { PlaylistView } from './playlistView.js';
 
 export class HomeView {
-  constructor(songState) {
+ constructor(songState, app) {
     this.songState = songState;
+    this.app = app;
     this.homeView = document.getElementById('home-view');
     this.carouselInner = document.getElementById('carousel-inner');
     this.recentlyPlayed = document.getElementById('recently-played');

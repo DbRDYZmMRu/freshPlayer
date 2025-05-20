@@ -1,12 +1,12 @@
 // js/queueView.js
 export class QueueView {
-  constructor(songState) {
+  constructor(songState, app) {
     this.songState = songState;
+    this.app = app;
     this.queuePlayer = document.getElementById('queue-player');
     this.toggleBtn = document.getElementById('queue-toggle-btn');
     this.clearBtn = document.getElementById('queue-clear-btn');
     this.tracklist = document.querySelector('#queue-player .tracklist');
-    this.app = document.querySelector('body').__app;
   }
   
   init() {
@@ -14,8 +14,12 @@ export class QueueView {
       console.error('queue-player element not found');
       return;
     }
+    console.log('QueueView.init, queueToggleBtn:', !!this.toggleBtn, 'app:', !!this.app);
+    if (!this.toggleBtn) {
+      console.error('queue-toggle-btn element not found in DOM');
+    }
     if (!this.app) {
-      console.error('App instance not found for overlay navigation');
+      console.error('App instance not provided to QueueView');
     }
     this.render();
     this.bindEvents();
@@ -48,12 +52,21 @@ export class QueueView {
   
   bindEvents() {
     try {
-      if (this.toggleBtn && this.app) {
+      if (this.toggleBtn) {
         this.toggleBtn._handler = () => {
-          console.log('Queue toggle button clicked, returning to detailed-player');
-          this.app.showOverlayView('detailed-player');
+          console.log('Queue toggle button (🎵) clicked, current view:', this.app?.currentView);
+          if (this.app) {
+            this.app.showOverlayView('detailed-player');
+          } else {
+            console.warn('App instance not available, falling back to DOM navigation');
+            document.getElementById('queue-player').classList.add('hidden');
+            document.getElementById('detailed-player').classList.add('active');
+            document.getElementById('playback-overlay').style.display = 'none';
+          }
         };
         this.toggleBtn.addEventListener('click', this.toggleBtn._handler);
+      } else {
+        console.error('queue-toggle-btn not found, cannot bind event');
       }
       
       if (this.clearBtn) {
@@ -81,11 +94,13 @@ export class QueueView {
   }
   
   show() {
+    console.log('QueueView.show called');
     this.queuePlayer.classList.remove('hidden');
     document.getElementById('playback-overlay').style.display = 'none';
   }
   
   hide() {
+    console.log('QueueView.hide called');
     this.queuePlayer.classList.add('hidden');
   }
 }
