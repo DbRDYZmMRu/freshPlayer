@@ -112,7 +112,7 @@ export class TracklistView {
       }
       this.playbackOverlay._handler = e => {
         if (e.target.classList.contains('playback-control')) return;
-        if (this.songState.getState().currentSong.title === 'Select a track') return;
+        if (this.songState.getState().currentSong.title === 'Play a record') return;
         this.songState.pushView('detailed-player');
         this.container.classList.add('hidden');
         document.getElementById('detailed-player').classList.add('active');

@@ -6,7 +6,7 @@ export class SongState {
     this.state = {
       songs: [],
       albums: [],
-      currentSong: { id: null, title: 'Select a track', album: '', thumbnail: '', mp3_url: '', isPlaying: false, currentTime: '0:00', duration: '0:00', progress: 0, lyrics: [] },
+      currentSong: { id: null, title: 'Play a record', album: '', thumbnail: '', mp3_url: '', isPlaying: false, currentTime: '0:00', duration: '0:00', progress: 0, lyrics: [] },
       currentAlbum: null,
       queue: [],
       recentlyPlayed: [],

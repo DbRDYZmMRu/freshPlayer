@@ -53,7 +53,7 @@ export class DetailedView {
     try {
       const { currentSong, albums, favourites, shuffle, repeat } = state;
       this.albumArt.src = currentSong.thumbnail || currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
-      this.songTitle.textContent = currentSong.title || 'Select a track';
+      this.songTitle.textContent = currentSong.title || 'Play a record';
       this.artist.textContent = currentSong.artist || 'Frith Hilton';
       this.currentTime.textContent = currentSong.currentTime || '0:00';
       this.totalTime.textContent = currentSong.duration || '0:00';

@@ -244,7 +244,7 @@ export class DetailedView {
     try {
       const { currentSong, albums, favourites, shuffle, repeat } = state;
       this.albumArt.src = currentSong.thumbnail || currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
-      this.songTitle.textContent = currentSong.title || 'Select a track';
+      this.songTitle.textContent = currentSong.title || 'Play a record';
       this.artist.textContent = currentSong.artist || 'Frith Hilton';
       this.currentTime.textContent = currentSong.currentTime || '0:00';
       this.totalTime.textContent = currentSong.duration || '0:00';
@@ -1104,7 +1104,7 @@ export class LyricsView {
   updateUI(state) {
     try {
       const song = state.currentSong;
-      this.lyricsSongTitle.textContent = song.title || 'Select a track';
+      this.lyricsSongTitle.textContent = song.title || 'Play a record';
       this.lyricsArtist.textContent = song.artist || 'Frith Hilton';
       this.lyricsBackground.style.backgroundImage = `url(${song.thumbnail || song.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'})`;
       this.lyricsContainer.innerHTML = '';
@@ -1432,7 +1432,7 @@ class App {
       this.songState.subscribe(state => {
         console.log('Playback overlay updating, isPlaying:', state.currentSong.isPlaying, 'currentView:', this.currentView);
         playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
-        playbackTitle.textContent = state.currentSong.title || 'Select a track';
+        playbackTitle.textContent = state.currentSong.title || 'Play a record';
         playbackAlbum.textContent = state.currentSong.album || 'Unknown';
         playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
       });
@@ -1445,7 +1445,7 @@ class App {
           this.songState.togglePlay();
           return;
         }
-        if (this.songState.getState().currentSong.title === 'Select a track') {
+        if (this.songState.getState().currentSong.title === 'Play a record') {
           console.log('No song selected, skipping navigation');
           return;
         }
@@ -2220,7 +2220,7 @@ export class SongState {
     this.state = {
       songs: [],
       albums: [],
-      currentSong: { id: null, title: 'Select a track', album: '', thumbnail: '', mp3_url: '', isPlaying: false, currentTime: '0:00', duration: '0:00', progress: 0, lyrics: [] },
+      currentSong: { id: null, title: 'Play a record', album: '', thumbnail: '', mp3_url: '', isPlaying: false, currentTime: '0:00', duration: '0:00', progress: 0, lyrics: [] },
       currentAlbum: null,
       queue: [],
       recentlyPlayed: [],
@@ -2901,7 +2901,7 @@ export class TracklistView {
       }
       this.playbackOverlay._handler = e => {
         if (e.target.classList.contains('playback-control')) return;
-        if (this.songState.getState().currentSong.title === 'Select a track') return;
+        if (this.songState.getState().currentSong.title === 'Play a record') return;
         this.songState.pushView('detailed-player');
         this.container.classList.add('hidden');
         document.getElementById('detailed-player').classList.add('active');
@@ -4538,7 +4538,7 @@ The index.html
   <div class="playback-overlay" id="playback-overlay">
     <img class="playback-cover" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" alt="Track Cover">
     <div class="playback-info">
-      <div class="playback-title">Select a track</div>
+      <div class="playback-title">Play a record</div>
       <div class="playback-album">Unknown</div>
     </div>
     <span class="playback-control" id="playback-control">▶</span>
@@ -4552,7 +4552,7 @@ The index.html
         <img id="detailed-album-art" src="https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png" alt="Album Art" onerror="this.src='https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'">
       </div>
       <div class="text-center mb-3">
-        <h5 class="song-title fs-4 fw-bold" id="detailed-song-title">Select a track</h5>
+        <h5 class="song-title fs-4 fw-bold" id="detailed-song-title">Play a record</h5>
         <p class="artist fs-5 text-muted" id="detailed-artist">Frith Hilton</p>
       </div>
       <div class="d-flex justify-content-center align-items-center gap-3 mb-3">

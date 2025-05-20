@@ -88,8 +88,8 @@ class App {
       this.songState.subscribe(state => {
         console.log('Playback overlay updating, isPlaying:', state.currentSong.isPlaying, 'currentView:', this.currentView);
         playbackCover.src = state.currentSong.thumbnail || state.currentSong.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png';
-        playbackTitle.textContent = state.currentSong.title || 'Select a track';
-        playbackAlbum.textContent = state.currentSong.album || 'Unknown';
+        playbackTitle.textContent = state.currentSong.title || 'Play a record';
+        playbackAlbum.textContent = state.currentSong.album || 'Frith Hilton';
         playbackControl.textContent = state.currentSong.isPlaying ? '⏸' : '▶';
       });
       
@@ -101,7 +101,7 @@ class App {
           this.songState.togglePlay();
           return;
         }
-        if (this.songState.getState().currentSong.title === 'Select a track') {
+        if (this.songState.getState().currentSong.title === 'Play a record') {
           console.log('No song selected, skipping navigation');
           return;
         }

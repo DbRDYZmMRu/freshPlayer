@@ -57,7 +57,7 @@ export class LyricsView {
   updateUI(state) {
     try {
       const song = state.currentSong;
-      this.lyricsSongTitle.textContent = song.title || 'Select a track';
+      this.lyricsSongTitle.textContent = song.title || 'Play a record';
       this.lyricsArtist.textContent = song.artist || 'Frith Hilton';
       this.lyricsBackground.style.backgroundImage = `url(${song.thumbnail || song.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'})`;
       this.lyricsContainer.innerHTML = '';
