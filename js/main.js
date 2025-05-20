@@ -6,6 +6,7 @@ import { DetailedView } from './detailedView.js';
 import { LyricsView } from './lyricsView.js';
 import { QueueView } from './queueView.js';
 import { PlaylistView } from './playlistView.js';
+import { FavouritesView } from './favouritesView.js';
 
 class App {
   constructor() {
@@ -16,7 +17,8 @@ class App {
       'detailed-player': new DetailedView(this.songState, this),
       'lyrics-player': new LyricsView(this.songState, this),
       'queue-player': new QueueView(this.songState, this),
-      'playlist-view': null // Initialized dynamically for each playlist
+      'playlist-view': null,
+      'favourites-view': null // Initialized dynamically
     };
     this.currentView = 'home-view';
     this.isNavigating = false;
@@ -24,7 +26,6 @@ class App {
   
   init() {
     console.log('App.init called, views:', Object.keys(this.views));
-    // Initialize static views
     Object.entries(this.views).forEach(([id, view]) => {
       if (view) {
         console.log(`Initializing view: ${view.constructor.name}`);
@@ -39,7 +40,7 @@ class App {
   handleNavigation(state) {
     const currentViewId = state.navigationHistory[state.navigationHistory.length - 1] || 'home-view';
     console.log('handleNavigation called, currentViewId:', currentViewId, 'previous currentView:', this.currentView, 'isPlaying:', state.currentSong.isPlaying);
-    if (!this.views[currentViewId] && currentViewId !== 'playlist-view') {
+    if (!this.views[currentViewId] && !['playlist-view', 'favourites-view'].includes(currentViewId)) {
       console.warn(`View ${currentViewId} not found, defaulting to home-view`);
       this.songState.pushView('home-view');
       return;
@@ -257,7 +258,6 @@ class App {
           const playlistName = playlistItem.dataset.playlistName;
           console.log('Playlist item clicked:', playlistName, 'current history:', this.songState.getState().navigationHistory);
           this.isNavigating = true;
-          // Initialize PlaylistView dynamically
           this.views['playlist-view'] = new PlaylistView(
             this.songState,
             'playlist-view',

@@ -364,6 +364,33 @@ export class SongState {
     this.notify();
   }
   
+  reorderFavourites(newOrder) {
+    if (!Array.isArray(newOrder) || newOrder.length !== this.state.favourites.length) {
+      console.log('Invalid favourites order:', newOrder);
+      return false;
+    }
+    const validOrder = newOrder.filter(id => this.state.favourites.includes(id));
+    if (validOrder.length !== this.state.favourites.length) {
+      console.log('Invalid favourites order: not all IDs present');
+      return false;
+    }
+    this.state.favourites = validOrder;
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
+  removeFromFavourites(songId) {
+    if (!this.state.favourites.includes(songId)) {
+      console.log(`Song ${songId} not in favourites`);
+      return false;
+    }
+    this.state.favourites = this.state.favourites.filter(id => id !== songId);
+    this.saveState();
+    this.notify();
+    return true;
+  }
+  
   createPlaylist(name) {
     if (!name || this.state.playlists[name]) {
       console.log(`Playlist "${name}" already exists`);

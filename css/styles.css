@@ -1072,3 +1072,90 @@ body {
     font-size: 16px !important;
   }
 }
+
+/* css/styles.css (partial update, append to existing file) */
+
+/* Favourites View */
+#favourites-view {
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 60px 15px 80px;
+  display: block;
+}
+
+#favourites-view.hidden {
+  display: none;
+}
+
+#favourites-sticky-navbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+#favourites-sticky-navbar.sticky {
+  display: flex;
+  align-items: center;
+  opacity: 1;
+}
+
+#favourites-sticky-navbar .thumbnail-art {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 10px;
+  opacity: 1;
+  border: 1px solid #fff; /* Remove after debugging */
+}
+
+#favourites-sticky-navbar .album-name {
+  color: #fff;
+  font-size: 16px;
+}
+
+.view-all-link {
+  color: #6b48ff;
+  font-size: 14px;
+  text-decoration: none;
+  align-self: center;
+}
+
+.view-all-link:hover {
+  text-decoration: underline;
+}
+
+/* Update existing back-btn selector */
+.back-btn, #tracklist-back-btn, #playlist-back-btn, #favourites-back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1003;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+  pointer-events: auto;
+}
+
+/* Update responsive media query */
+@media (max-width: 360px) {
+  #tracklist-view, #playlist-view, #favourites-view {
+    padding: 60px 10px 80px;
+  }
+}

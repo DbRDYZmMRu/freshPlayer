@@ -1,6 +1,7 @@
 // js/homeView.js
 import { TracklistView } from './tracklistView.js';
-import { generateCollage } from './utils.js'; // Import collage utility
+import { FavouritesView } from './favouritesView.js';
+import { generateCollage } from './utils.js';
 
 export class HomeView {
   constructor(songState, app) {
@@ -36,12 +37,16 @@ export class HomeView {
       }
     }
     this.render();
-    this.songState.subscribe(state => this.render(state));
+    this.songState.subscribe(state => {
+      console.log('HomeView: State updated, favourites:', state.favourites, 'length:', state.favourites.length);
+      this.render(state);
+    });
     this.bindEvents();
   }
   
   async render(state = this.songState.getState()) {
     try {
+      console.log('Rendering HomeView, favourites count:', state.favourites.length);
       if (!this.carouselInner) {
         console.error('carousel-inner element not found');
       } else {
@@ -59,9 +64,30 @@ export class HomeView {
       }
       
       this.renderPlaylist(this.recentlyPlayed, state.recentlyPlayed, state.songs, 'Recently Played');
-      this.renderPlaylist(this.favourites, state.favourites, state.songs, 'Favourites');
       this.renderPlaylist(this.freshPicks, state.freshPicks, state.songs, 'Fresh Picks');
       
+      // Render Favourites
+      if (this.favourites) {
+        const favouriteSongs = Array.isArray(state.favourites) && state.favourites.length > 0 ?
+          state.favourites
+            .slice(0, 4) // Limit to 4 items
+            .map(id => state.songs.find(song => song.id === id))
+            .filter(song => song)
+          : [];
+        console.log('Favourites rendering, songs:', favouriteSongs, 'total count:', state.favourites.length);
+        this.favourites.innerHTML = favouriteSongs.length > 0 ?
+          favouriteSongs.map(song => `
+              <div class="playlist-item" data-song-id="${song.id}">
+                <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
+                <div class="track-title">${song.title}</div>
+                <div class="track-artist">${song.artist}</div>
+              </div>
+            `).join('') +
+          (state.favourites.length > 4 ? `<a href="#" class="view-all-link ms-2" data-view="favourites-view">View All</a>` : '') :
+          '<p>No songs in Favourites</p>';
+      }
+      
+      // Render Playlists
       if (this.playlistsContainer) {
         this.playlistsContainer.innerHTML = Array.isArray(Object.keys(state.playlists)) && Object.keys(state.playlists).length > 0 ?
           await Promise.all(Object.entries(state.playlists).map(async ([name, songIds]) => {
@@ -105,15 +131,17 @@ export class HomeView {
     }
     container.innerHTML = Array.isArray(songIds) && songIds.length > 0 ?
       songIds
-      .map(id => songs.find(song => song.id === id))
-      .filter(song => song)
-      .map(song => `
+        .slice(0, 4) // Limit to 4 items
+        .map(id => songs.find(song => song.id === id))
+        .filter(song => song)
+        .map(song => `
             <div class="playlist-item" data-song-id="${song.id}">
-              <img src="${song.cover || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
+              <img src="${song.thumbnail || 'https://frithhilton.com.ng/images/favicon/FrithHiltonLogo.png'}" alt="${song.title}">
               <div class="track-title">${song.title}</div>
               <div class="track-artist">${song.artist}</div>
             </div>
-          `).join('') :
+          `).join('') +
+        (songIds.length > 4 && sectionName !== 'Favourites' ? `<a href="#" class="view-all-link ms-2" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">View All</a>` : '') :
       `<p>No songs in ${sectionName}</p>`;
   }
   
@@ -137,7 +165,34 @@ export class HomeView {
       sections.forEach(section => {
         section.addEventListener('click', e => {
           const item = e.target.closest('.playlist-item');
-          if (item) {
+          const viewAll = e.target.closest('.view-all-link');
+          if (viewAll) {
+            e.preventDefault();
+            const viewId = viewAll.dataset.view;
+            console.log('View All clicked for:', viewId);
+            if (viewId === 'favourites-view') {
+              this.app.views['favourites-view'] = new FavouritesView(
+                this.songState,
+                'favourites-view',
+                'Favourites',
+                'favourites',
+                this.applyGradient.bind(this),
+                this.app
+              );
+              this.app.views['favourites-view'].init('home-view');
+              this.songState.pushView('favourites-view');
+              this.app.showView('favourites-view'); // Added to show view
+            } else if (viewId === 'recently-played-view') {
+              this.app.views['tracklist-view'] = new TracklistView(
+                this.songState,
+                this.applyGradient.bind(this),
+                this.app
+              );
+              this.app.views['tracklist-view'].init('home-view');
+              this.songState.pushView('tracklist-view');
+              this.app.showView('tracklist-view'); // Added to show view
+            }
+          } else if (item) {
             const songId = item.dataset.songId;
             this.songState.setSong(songId);
             this.songState.pushView('detailed-player');
