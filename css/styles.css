@@ -1297,7 +1297,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 0px;
   font-size: 14px;
   opacity: 1;
 }

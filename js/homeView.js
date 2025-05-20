@@ -109,7 +109,7 @@ export class HomeView {
                 .join('') +
               (state.favourites.length > 4
                 ? `
-            <div class="cover-container" data-view="favourites-view">
+            <div class="view-all-cover-container" data-view="favourites-view">
               ${collageHtml}
               <div class="overlay-label">View All</div>
             </div>
@@ -192,7 +192,7 @@ export class HomeView {
             .join('') +
           (validSongIds.length > 4
             ? `
-          <div class="cover-container" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">
+          <div class="view-all-cover-container" data-view="${sectionName.toLowerCase().replace(' ', '-')}-view">
             ${collageHtml}
             <div class="overlay-label">View All</div>
           </div>
@@ -221,7 +221,7 @@ export class HomeView {
       sections.forEach((section) => {
         section.addEventListener('click', (e) => {
           const item = e.target.closest('.playlist-item');
-          const coverContainer = e.target.closest('.cover-container');
+          const coverContainer = e.target.closest('.view-all-cover-container');
           if (coverContainer) {
             e.preventDefault();
             const viewId = coverContainer.dataset.view;
