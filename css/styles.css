@@ -424,8 +424,8 @@ body {
 .album-art-container {
   position: relative;
   display: inline-block;
-  width: 300px;
-  height: 300px;
+  width: 450px;
+  height: 450px;
   max-width: 80vw;
   max-height: 80vw;
   margin-top: 20px;
@@ -442,7 +442,7 @@ body {
 
 .album-art {
   width: 100%;
-  max-width: 300px;
+  max-width: 450px;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 12px;
@@ -612,8 +612,8 @@ body {
 }
 
 #detailed-album-art {
-  width: 300px;
-  height: 300px;
+  width: 450px;
+  height: 450px;
   object-fit: cover;
   border-radius: 12px;
   margin-bottom: 20px;
