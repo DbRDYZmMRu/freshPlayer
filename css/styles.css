@@ -442,7 +442,7 @@ body {
 
 .album-art {
   width: 100%;
-  max-width: 450px;
+  max-width: 400px;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 12px;
